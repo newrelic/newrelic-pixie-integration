@@ -1,0 +1,4 @@
+.idea/
+env.list
+go.sum
+bin
