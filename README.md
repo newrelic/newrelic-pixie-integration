@@ -6,7 +6,7 @@ The Pixie integration configures Pixie to send a set of curated observability da
 
 ## Getting Started
 
-Make sure you've got a Pixie account and New Relic account setup and have collected the following information:
+Make sure you have a Pixie account and New Relic account setup and have collected the following information:
 
  * [New Relic license key](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/)
  * [Pixie API key](https://docs.pixielabs.ai/using-pixie/api-quick-start/#get-an-api-token)
@@ -23,7 +23,7 @@ Docker is required to build the Pixie integration container image.
 
 ```docker run --env-file ./env.list -it newrelic/pixie-integration:1.0.0```
 
-The following environment variables should be defined in the `env.list` file:
+Define the following environment variables in the `env.list` file:
 
 ```
 CLUSTER_NAME=
