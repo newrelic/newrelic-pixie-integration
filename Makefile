@@ -2,7 +2,7 @@ BIN_DIR = ./bin
 TOOLS_DIR := $(BIN_DIR)/dev-tools
 BINARY_NAME ?= pixie-integration
 DOCKER_IMAGE_NAME ?= newrelic/pixie-integration
-DOCKER_IMAGE_TAG ?= 1.0.0
+DOCKER_IMAGE_TAG ?= 0.1.0
 
 GOLANGCILINT_VERSION = 1.33.0
 
