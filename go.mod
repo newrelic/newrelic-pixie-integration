@@ -9,3 +9,5 @@ require (
 	google.golang.org/grpc v1.37.0
 	px.dev/pxapi v0.0.0-20210419204323-b1762c24ad7e
 )
+
+go 1.13
