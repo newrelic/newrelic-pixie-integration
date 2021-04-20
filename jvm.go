@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
-	"github.com/newrelic/newrelic-telemetry-sdk-go/telemetry"
-	"go.withpixie.dev/pixie/src/api/go/pxapi/types"
-	vizierapipb "go.withpixie.dev/pixie/src/api/public/vizierapipb"
 	"time"
+
+	vizierapipb "px.dev/pxapi/pxpb/vizierapipb"
+	"px.dev/pxapi/types"
 )
 
-const JvmPXL = `
+const jvmPXL = `
 import px
 
 ns_per_ms = 1000 * 1000
@@ -56,29 +56,30 @@ by_k8s['time_'] = by_k8s['timestamp']
 px.display(by_k8s, 'jvm')
 `
 
-type metricDef struct {
-	metricName string
-	attributes map[string]interface{}
+type MetricDef struct {
+	metricName  string
+	description string
+	unit        string
+	attributes  map[string]interface{}
 }
 
-var metricMapping = map[string]metricDef{
-	"young_gc_time": metricDef{"runtime.jvm.gc.collection", map[string]interface{}{"gc" : "young"}},
-	"full_gc_time": metricDef{"runtime.jvm.gc.collection", map[string]interface{}{"gc" : "full"}},
-	"used_heap_size": metricDef{"runtime.jvm.memory.area", map[string]interface{}{"type" : "used", "area" : "heap"}},
-	"total_heap_size": metricDef{"runtime.jvm.memory.area", map[string]interface{}{"type" : "total", "area" : "heap"}},
-	"max_heap_size": metricDef{"runtime.jvm.memory.area", map[string]interface{}{"type" : "max", "area" : "heap"}},
+var metricMapping = map[string]MetricDef{
+	"young_gc_time":   {"runtime.jvm.gc.collection", "", "ns", map[string]interface{}{"gc": "young"}},
+	"full_gc_time":    {"runtime.jvm.gc.collection", "", "ns", map[string]interface{}{"gc": "full"}},
+	"used_heap_size":  {"runtime.jvm.memory.area", "", "bytes", map[string]interface{}{"type": "used", "area": "heap"}},
+	"total_heap_size": {"runtime.jvm.memory.area", "", "bytes", map[string]interface{}{"type": "total", "area": "heap"}},
+	"max_heap_size":   {"runtime.jvm.memory.area", "", "bytes", map[string]interface{}{"type": "max", "area": "heap"}},
 }
 
-
-type metricData struct {
-	MetricName    string
-	Value         float64
-	Timestamp     time.Time
-	Service       string
-	Pod           string
-	ClusterName   string
-	Namespace     string
-	Attributes    map[string]interface{}
+type MetricData struct {
+	MetricDef   MetricDef
+	Value       float64
+	Timestamp   time.Time
+	Service     string
+	Pod         string
+	ClusterName string
+	Namespace   string
+	Attributes  map[string]interface{}
 }
 
 func JvmHandler(r *types.Record, t *TelemetrySender) error {
@@ -96,43 +97,24 @@ func JvmHandler(r *types.Record, t *TelemetrySender) error {
 		} else if valueDatum.Type() == vizierapipb.FLOAT64 {
 			value = float64(valueDatum.(*types.Float64Value).Value())
 		} else {
-			return fmt.Errorf("Unsupported data type for metric %s", metricName)
+			return fmt.Errorf("unsupported data type for metric %s", metricName)
 		}
 
-		sendMetric(&metricData{
-			MetricName: metricDef.metricName,
-			Value: value,
-			Timestamp: timestamp,
-			Service: service,
-			Pod: pod,
+		sendMetric(&MetricData{
+			MetricDef:   metricDef,
+			Value:       value,
+			Timestamp:   timestamp,
+			Service:     service,
+			Pod:         pod,
 			ClusterName: clusterName,
-			Namespace: namespace,
-			Attributes: metricDef.attributes,
-		},t)
+			Namespace:   namespace,
+			Attributes:  metricDef.attributes,
+		}, t)
 	}
 
 	return nil
 }
 
-func sendMetric(data *metricData, t *TelemetrySender) {
-	attributes := map[string]interface{}{
-		"service.name" :            data.Service,
-		"service.instance.id":      data.Pod,
-		"instrumentation.provider": "opentelemetry",
-		"instrumentation.name":     "pixie",
-		"k8s.cluster.name":         data.ClusterName,
-		"k8s.namespace.name":       data.Namespace,
-		"k8s.pod.name":             data.Pod,
-	}
-
-	for k, v := range data.Attributes {
-		attributes[k] = v
-	}
-
-	t.Harvester.RecordMetric(telemetry.Gauge{
-		Name: data.MetricName,
-		Value: data.Value,
-		Timestamp: data.Timestamp,
-		Attributes: attributes,
-	})
+func sendMetric(data *MetricData, t *TelemetrySender) {
+	_ = t.ExportMetric(data)
 }

@@ -1,11 +1,11 @@
 FROM golang:1.15
 
-RUN mkdir -p app
+RUN mkdir newrelic-pixie-integration
+WORKDIR newrelic-pixie-integration
+COPY go.mod .
+RUN go mod download
 
-COPY go.mod app/
-RUN cd app && go mod download
+COPY *.go ./
+RUN go build
 
-COPY . app/
-RUN cd app && go build ./cmd/pixie-integration
-
-CMD ./app/pixie-integration
+CMD ./newrelic-pixie-integration
