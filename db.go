@@ -30,16 +30,17 @@ type DbSpanData struct {
 }
 
 func DbSpanHandler(r *types.Record, t *TelemetrySender) error {
+	namespace, service, pod := takeNamespaceServiceAndPod(r)
 	return sendDbSpan(&DbSpanData{
 		Timestamp:   r.GetDatum("time_").(*types.Time64NSValue).Value(),
 		SpanId:      idGenerator.NewSpanID(),
 		TraceId:     idGenerator.NewTraceID(),
 		Name:        r.GetDatum("req_body").String(),
 		Duration:    time.Duration(r.GetDatum("latency").(*types.Int64Value).Value()),
-		Service:     r.GetDatum("service").String(),
-		Pod:         r.GetDatum("pod").String(),
+		Service:     service,
+		Pod:         pod,
 		ClusterName: t.ClusterName,
-		Namespace:   r.GetDatum("namespace").String(),
+		Namespace:   namespace,
 		DbSystem:    "mysql",
 	}, t)
 }

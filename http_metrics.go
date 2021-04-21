@@ -47,12 +47,13 @@ type HttpMetricData struct {
 }
 
 func HttpMetricsHandler(r *types.Record, t *TelemetrySender) error {
+	namespace, service, pod := takeNamespaceServiceAndPod(r)
 	sendHttpMetric(&HttpMetricData{
 		Timestamp:   r.GetDatum("timestamp").(*types.Time64NSValue).Value(),
-		Service:     r.GetDatum("service").String(),
-		Pod:         r.GetDatum("pod").String(),
+		Service:     service,
+		Pod:         pod,
 		ClusterName: t.ClusterName,
-		Namespace:   r.GetDatum("namespace").String(),
+		Namespace:   namespace,
 		StatusCode:  r.GetDatum("status_code").(*types.Int64Value).Value(),
 		Min:         float64(r.GetDatum("latency_min").(*types.Int64Value).Value()) / 1000000,
 		Max:         float64(r.GetDatum("latency_max").(*types.Int64Value).Value()) / 1000000,
