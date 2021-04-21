@@ -60,7 +60,8 @@ func SpanHandler(r *types.Record, t *TelemetrySender) error {
 	if err != nil {
 		return err
 	}
-
+	namespace, service, pod := takeNamespaceServiceAndPod(r)
+	cleanedValues := cleanNamespacePrefix(r, "parent_service", "parent_pod")
 	return sendSpan(&SpanData{
 		Timestamp:     r.GetDatum("time_").(*types.Time64NSValue).Value(),
 		SpanId:        spanID,
@@ -68,17 +69,17 @@ func SpanHandler(r *types.Record, t *TelemetrySender) error {
 		ParentId:      parentSpanID,
 		Name:          r.GetDatum("req_path").String(),
 		Duration:      time.Duration(r.GetDatum("latency").(*types.Int64Value).Value()),
-		Service:       r.GetDatum("service").String(),
-		Pod:           r.GetDatum("pod").String(),
+		Service:       service,
+		Pod:           pod,
 		ClusterName:   t.ClusterName,
-		Namespace:     r.GetDatum("namespace").String(),
+		Namespace:     namespace,
 		Host:          r.GetDatum("host").String(),
 		Method:        r.GetDatum("req_method").String(),
 		Path:          r.GetDatum("req_path").String(),
 		StatusCode:    r.GetDatum("resp_status").(*types.Int64Value).Value(),
 		UserAgent:     r.GetDatum("user_agent").String(),
-		ParentService: r.GetDatum("parent_service").String(),
-		ParentPod:     r.GetDatum("parent_pod").String(),
+		ParentService: cleanedValues[0],
+		ParentPod:     cleanedValues[1],
 	}, t)
 }
 

@@ -84,10 +84,8 @@ type MetricData struct {
 
 func JvmHandler(r *types.Record, t *TelemetrySender) error {
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
-	service := r.GetDatum("service").String()
-	pod := r.GetDatum("pod").String()
+	namespace,service, pod := takeNamespaceServiceAndPod(r)
 	clusterName := t.ClusterName
-	namespace := r.GetDatum("namespace").String()
 
 	for metricName, metricDef := range metricMapping {
 		valueDatum := r.GetDatum(metricName)
