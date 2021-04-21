@@ -85,7 +85,7 @@ func runScript(name string, ctx context.Context, vz *pxapi.VizierClient, e OtlpD
 		resultSet.Close()
 
 		fmt.Printf("Done streaming %v results for %s\n", t.GetAndResetRecordsHandled(), name)
-		time.Sleep(1 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 

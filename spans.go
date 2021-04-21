@@ -10,7 +10,8 @@ import (
 
 const spanPXL = `
 import px
-df = px.DataFrame('http_events', start_time='-1m')
+df = px.DataFrame('http_events', start_time='-10s')
+df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']
@@ -23,7 +24,7 @@ df.trace_id = px.pluck(df.req_headers, 'X-B3-TraceId')
 df.span_id = px.pluck(df.req_headers, 'X-B3-SpanId')
 df.parent_id = px.pluck(df.req_headers, 'X-B3-ParentSpanId')
 
-df = df[['time_', 'req_method', 'req_path', 'resp_status', 'latency', 'service', 'pod', 'namespace', 'parent_service', 'parent_pod', 'host', 'trace_id', 'span_id', 'parent_id', 'user_agent']]
+df = df[['time_', 'container', 'req_method', 'req_path', 'resp_status', 'latency', 'service', 'pod', 'namespace', 'parent_service', 'parent_pod', 'host', 'trace_id', 'span_id', 'parent_id', 'user_agent']]
 px.display(df, 'http')
 `
 
@@ -34,6 +35,7 @@ type SpanData struct {
 	ParentId      SpanID
 	Name          string
 	Duration      time.Duration
+	Container     string
 	Service       string
 	Pod           string
 	ClusterName   string
@@ -69,6 +71,7 @@ func SpanHandler(r *types.Record, t *TelemetrySender) error {
 		ParentId:      parentSpanID,
 		Name:          r.GetDatum("req_path").String(),
 		Duration:      time.Duration(r.GetDatum("latency").(*types.Int64Value).Value()),
+		Container:     r.GetDatum(colContainer).String(),
 		Service:       service,
 		Pod:           pod,
 		ClusterName:   t.ClusterName,

@@ -7,12 +7,13 @@ import (
 
 var dbPXL = `
 import px
-df = px.DataFrame('mysql_events', start_time='-1m')
+df = px.DataFrame('mysql_events', start_time='-10s')
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']
+df.container = df.ctx['container_name']
 
-df = df[['time_', 'service', 'pod', 'namespace', 'req_body', 'latency']]
+df = df[['time_', 'container', 'service', 'pod', 'namespace', 'req_body', 'latency']]
 px.display(df, 'mysql')
 `
 
@@ -22,6 +23,7 @@ type DbSpanData struct {
 	TraceId     TraceID
 	Name        string
 	Duration    time.Duration
+	Container   string
 	Service     string
 	Pod         string
 	ClusterName string
@@ -37,6 +39,7 @@ func DbSpanHandler(r *types.Record, t *TelemetrySender) error {
 		TraceId:     idGenerator.NewTraceID(),
 		Name:        r.GetDatum("req_body").String(),
 		Duration:    time.Duration(r.GetDatum("latency").(*types.Int64Value).Value()),
+		Container:   r.GetDatum("container").String(),
 		Service:     service,
 		Pod:         pod,
 		ClusterName: t.ClusterName,
