@@ -1,38 +1,48 @@
-BIN_DIR = ./bin
-TOOLS_DIR := $(BIN_DIR)/dev-tools
-BINARY_NAME ?= pixie-integration
-DOCKER_IMAGE_NAME ?= newrelic/pixie-integration
-DOCKER_IMAGE_TAG ?= 0.1.0
+include .env
 
-GOLANGCILINT_VERSION = 1.33.0
+BIN_DIR = ./bin
+DOCKER_IMAGE_TAG ?= 0.1.0
 
 # required for enabling Go modules inside $GOPATH
 export GO111MODULE=on
 
 .PHONY: all
-all: build
+all: lint test build-container build
 
 .PHONY: build
-build: lint test build-container
+build:
+	sh scripts/build.sh
 
-$(TOOLS_DIR):
-	@mkdir -p $@
-
-$(TOOLS_DIR)/golangci-lint: $(TOOLS_DIR)
-	@echo "[tools] Downloading 'golangci-lint'"
-	@wget -O - -q https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | BINDIR=$(@D) sh -s v$(GOLANGCILINT_VERSION) > /dev/null 2>&1
+.PHONY: fmt
+fmt:
+	sh scripts/format.sh
 
 .PHONY: lint
-lint: $(TOOLS_DIR)/golangci-lint
-	@echo "[validate] Validating source code running golangci-lint"
-	@$(TOOLS_DIR)/golangci-lint run
+lint:
+	sh scripts/lint.sh
 
-.PHONY: build-container
-build-container:
-	docker build -t $(DOCKER_IMAGE_NAME):$(DOCKER_IMAGE_TAG) .
+config=env.list
+.PHONY: run
+run:
+	sh scripts/run.sh $(config)
 
 .PHONY: test
 test:
 	@echo "[test] Running unit tests"
 	@go test ./...
+
+.PHONY: setup
+setup:
+	sh scripts/setup.sh
+
+.PHONY: build-container
+build-container:
+	sh scripts/build-container.sh $(DOCKER_IMAGE_NAME) $(DOCKER_IMAGE_TAG)
+
+.PHONY: build-container-debug
+build-container-debug:
+	docker build -f Dockerfile.debug  -t $(DOCKER_IMAGE_NAME):debug .
+
+
+
 
