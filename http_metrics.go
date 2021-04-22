@@ -13,17 +13,20 @@ ns_per_ms = 1000 * 1000
 ns_per_s = 1000 * ns_per_ms
 window_ns = px.DurationNanos(10 * ns_per_s)
 
-df = px.DataFrame(table='http_events', start_time='-1m')
+
+
+df = px.DataFrame(table='http_events', start_time='-10s')
 
 df.timestamp = px.bin(df.time_, window_ns)
 
+df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']
 
 df.status_code = df.resp_status
 
-df = df.groupby(['timestamp', 'status_code', 'pod', 'service', 'namespace']).agg(
+df = df.groupby(['timestamp', 'status_code', 'pod', 'container','service', 'namespace']).agg(
     latency_min=('latency', px.min),
     latency_max=('latency', px.max),
     latency_sum=('latency', px.sum),
@@ -39,6 +42,7 @@ type HttpMetricData struct {
 	Pod         string
 	ClusterName string
 	Namespace   string
+	Container   string
 	StatusCode  int64
 	Min         float64
 	Max         float64
@@ -52,6 +56,7 @@ func HttpMetricsHandler(r *types.Record, t *TelemetrySender) error {
 		Timestamp:   r.GetDatum("timestamp").(*types.Time64NSValue).Value(),
 		Service:     service,
 		Pod:         pod,
+		Container:   r.GetDatum(colContainer).String(),
 		ClusterName: t.ClusterName,
 		Namespace:   namespace,
 		StatusCode:  r.GetDatum("status_code").(*types.Int64Value).Value(),

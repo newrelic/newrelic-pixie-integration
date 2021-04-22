@@ -43,7 +43,8 @@ func main() {
 	go runScript("http", ctx, vz, *otlpExporter, clusterName, spanPXL, SpanHandler)
 	go runScript("http_metrics", ctx, vz, *otlpExporter, clusterName, httpMetricsPXL, HttpMetricsHandler)
 	go runScript("jvm", ctx, vz, *otlpExporter, clusterName, jvmPXL, JvmHandler)
-	go runScript("db", ctx, vz, *otlpExporter, clusterName, dbPXL, DbSpanHandler)
+	go runScript("db_mysql", ctx, vz, *otlpExporter, clusterName, mysqlPXL, MySQLSpanHandler)
+	go runScript("db_pg", ctx, vz, *otlpExporter, clusterName, pgsqlPXL, PgSQLSpanHandler)
 	select {}
 }
 
@@ -85,7 +86,7 @@ func runScript(name string, ctx context.Context, vz *pxapi.VizierClient, e OtlpD
 		resultSet.Close()
 
 		fmt.Printf("Done streaming %v results for %s\n", t.GetAndResetRecordsHandled(), name)
-		time.Sleep(1 * time.Minute)
+		time.Sleep(10 * time.Second)
 	}
 }
 

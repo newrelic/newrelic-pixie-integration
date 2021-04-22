@@ -15,9 +15,10 @@ ns_per_ms = 1000 * 1000
 ns_per_s = 1000 * ns_per_ms
 window_ns = px.DurationNanos(10 * ns_per_s)
 
-df = px.DataFrame(table='jvm_stats', start_time='-1m')
+df = px.DataFrame(table='jvm_stats', start_time='-10s')
 df.timestamp = px.bin(df.time_, window_ns)
 
+df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']
@@ -27,7 +28,7 @@ df.total_heap_size = px.Bytes(df.total_heap_size)
 df.max_heap_size = px.Bytes(df.max_heap_size)
 
 # Aggregate over each process, k8s_object, and window.
-by_upid = df.groupby(['upid', 'pod', 'service', 'namespace', 'timestamp']).agg(
+by_upid = df.groupby(['upid','container', 'pod', 'service', 'namespace', 'timestamp']).agg(
     young_gc_time_max=('young_gc_time', px.max),
     young_gc_time_min=('young_gc_time', px.min),
     full_gc_time_max=('full_gc_time', px.max),
@@ -42,7 +43,7 @@ by_upid.young_gc_time = by_upid.young_gc_time_max - by_upid.young_gc_time_min
 by_upid.full_gc_time = by_upid.full_gc_time_max - by_upid.full_gc_time_min
 
 # Aggregate over each k8s_object, and window.
-by_k8s = by_upid.groupby(['pod', 'service', 'namespace', 'timestamp']).agg(
+by_k8s = by_upid.groupby(['container', 'pod', 'service', 'namespace', 'timestamp']).agg(
     young_gc_time=('young_gc_time', px.sum),
     full_gc_time=('full_gc_time', px.sum),
     used_heap_size=('used_heap_size', px.sum),
@@ -75,6 +76,7 @@ type MetricData struct {
 	MetricDef   MetricDef
 	Value       float64
 	Timestamp   time.Time
+	Container   string
 	Service     string
 	Pod         string
 	ClusterName string
@@ -84,7 +86,8 @@ type MetricData struct {
 
 func JvmHandler(r *types.Record, t *TelemetrySender) error {
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
-	namespace,service, pod := takeNamespaceServiceAndPod(r)
+	namespace, service, pod := takeNamespaceServiceAndPod(r)
+	container := r.GetDatum(colContainer).String()
 	clusterName := t.ClusterName
 
 	for metricName, metricDef := range metricMapping {
@@ -102,6 +105,7 @@ func JvmHandler(r *types.Record, t *TelemetrySender) error {
 			MetricDef:   metricDef,
 			Value:       value,
 			Timestamp:   timestamp,
+			Container:   container,
 			Service:     service,
 			Pod:         pod,
 			ClusterName: clusterName,

@@ -124,6 +124,10 @@ func transformHttpMetricData(data *HttpMetricData) metricpb.ResourceMetrics {
 					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Namespace}},
 				},
 				{
+					Key:   "k8s.container.name",
+					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Container}},
+				},
+				{
 					Key:   "k8s.pod.name",
 					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Pod}},
 				},
@@ -190,6 +194,10 @@ func transformMetricData(data *MetricData) metricpb.ResourceMetrics {
 				{
 					Key:   "service.instance.id",
 					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Pod}},
+				},
+				{
+					Key:   "k8s.container.name",
+					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Container}},
 				},
 				{
 					Key:   "k8s.cluster.name",
@@ -273,6 +281,10 @@ func transformSpanData(data *SpanData) tracepb.ResourceSpans {
 					Key:   "k8s.pod.name",
 					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Pod}},
 				},
+				{
+					Key:   "k8s.container.name",
+					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Container}},
+				},
 			},
 			DroppedAttributesCount: 0,
 		},
@@ -349,6 +361,10 @@ func transformDbSpanData(data *DbSpanData) tracepb.ResourceSpans {
 				{
 					Key:   "service.instance.id",
 					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Pod}},
+				},
+				{
+					Key:   "k8s.container.name",
+					Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: data.Container}},
 				},
 				{
 					Key:   "k8s.cluster.name",
