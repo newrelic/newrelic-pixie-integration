@@ -1,6 +1,5 @@
 // Adapted from https://github.com/open-telemetry/opentelemetry-go/blob/e9aaa04b8f88b0f8158bd27f72e57d33878f5bdd/trace/trace.go
-
-package main
+package adapter
 
 import (
 	"bytes"
@@ -8,13 +7,13 @@ import (
 )
 
 const (
-	errInvalidHexID errorConst = "trace-id and span-id can only contain [0-9a-f] characters, all lowercase"
+	errInvalidHexID errorConst = "trace-id and adapter-id can only contain [0-9a-f] characters, all lowercase"
 
 	errInvalidTraceIDLength errorConst = "hex encoded trace-id must have length equals to 32"
 	errNilTraceID           errorConst = "trace-id can't be all zero"
 
-	errInvalidSpanIDLength errorConst = "hex encoded span-id must have length equals to 16"
-	errNilSpanID           errorConst = "span-id can't be all zero"
+	errInvalidSpanIDLength errorConst = "hex encoded adapter-id must have length equals to 16"
+	errNilSpanID           errorConst = "adapter-id can't be all zero"
 )
 
 type errorConst string
@@ -35,7 +34,7 @@ func (t TraceID) IsValid() bool {
 	return !bytes.Equal(t[:], nilTraceID[:])
 }
 
-// SpanID is a unique identity of a span in a trace.
+// SpanID is a unique identity of a adapter in a trace.
 type SpanID [8]byte
 
 var nilSpanID SpanID
