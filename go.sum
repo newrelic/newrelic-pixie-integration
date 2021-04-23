@@ -497,6 +497,8 @@ github.com/nakabonne/nestif v0.3.0/go.mod h1:dI314BppzXjJ4HsCnbo7XzrJHPszZsjnk5w
 github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 h1:4kuARK6Y6FxaNu/BnU2OAaLF86eTVhP2hjTB6iMvItA=
 github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354/go.mod h1:KSVJerMDfblTH7p5MZaTt+8zaT2iEk3AkVb9PQdZuE8=
 github.com/newrelic/infra-identity-client-go v1.0.2/go.mod h1:lrG2ompP2Mr6D8WW615/h2AYNs9B9pw2zLuc38LNb4E=
+github.com/newrelic/infra-integrations-sdk v3.6.7+incompatible h1:dOsTM3DT6piFLpWLroIFw1Yy5ZqHpnS0HoS6B6WOV7k=
+github.com/newrelic/infra-integrations-sdk v3.6.7+incompatible/go.mod h1:tMUHRMq6mJS0YyBnbWrTXAnREnQqC1AGO6Lu45u5xAM=
 github.com/newrelic/infrastructure-agent v0.0.0-20210422145429-ffccdd3cde2b h1:frsZg6GqKBzzKOy5C3bs+PjL0pbSG5E0jpvXuyq5frQ=
 github.com/newrelic/infrastructure-agent v0.0.0-20210422145429-ffccdd3cde2b/go.mod h1:Y28EhZThQz4mM5VD8TKrDixQDnCI+JbsyNnO8cHukIs=
 github.com/niemeyer/pretty v0.0.0-20200227124842-a10e7caefd8e h1:fD57ERR4JtEqsWbfPhv4DMiApHyliiK5xCTNVSPiaAs=

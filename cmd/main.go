@@ -2,54 +2,77 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
+	"os/signal"
+	"sync"
+	"syscall"
 
+	"github.com/newrelic/infrastructure-agent/pkg/log"
 	"github.com/newrelic/newrelic-pixie-integration/internal/adapter"
+	"github.com/newrelic/newrelic-pixie-integration/internal/config"
+	"github.com/newrelic/newrelic-pixie-integration/internal/errors"
 	"github.com/newrelic/newrelic-pixie-integration/internal/exporter"
 	"github.com/newrelic/newrelic-pixie-integration/internal/worker"
 	"px.dev/pxapi"
 )
 
-func main() {
-	ctx := context.Background()
-	fmt.Println("Setting up OTLP exporter")
-	exporter, err := exporter.New(
-		ctx,
-		os.Getenv("NR_OTLP_HOST"),
-		os.Getenv("NR_LICENSE_KEY"),
-	)
-	if err != nil {
-		fmt.Printf("Error configuring the OTLP exporter: %v", err)
-		os.Exit(1)
-	}
-
-	clusterId := os.Getenv("PIXIE_CLUSTER_ID")
-
-	fmt.Printf("Setting up Pixie client with cluster-id %s\n", clusterId)
-	vz, err := setupPixie(
-		ctx,
-		os.Getenv("PIXIE_API_KEY"),
-		clusterId)
-	if err != nil {
-		fmt.Printf("Error configuring the Pixie client: %v", err)
-		os.Exit(2)
-	}
-	clusterName := os.Getenv("CLUSTER_NAME")
-
-	w := worker.Build(ctx, clusterName, vz, exporter)
-	go w.Metrics(adapter.HTTPMetrics)
-	go w.Metrics(adapter.JVM)
-	go w.Spans(adapter.HTTPSpans)
-	go w.Spans(adapter.MySQL)
-	go w.Spans(adapter.PgSQL)
-	select {}
+var metricsWorker = []adapter.MetricsAdapter{
+	adapter.HTTPMetrics,
+	adapter.JVM,
 }
 
-func setupPixie(ctx context.Context, apiKey, clusterId string) (*pxapi.VizierClient, error) {
-	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(apiKey))
+var spansWorker = []adapter.SpansAdapter{}
+
+func main() {
+	ctx := context.Background()
+	ctx, cancel := context.WithCancel(ctx)
+
+	cfg, err := config.GetConfig()
 	if err != nil {
-		return nil, err
+		log.Error(err)
+		os.Exit(err.ExitStatus())
 	}
-	return client.NewVizierClient(ctx, clusterId)
+	log.Debug("Setting up OTLP exporter")
+	exporter, err := exporter.New(ctx, cfg.Exporter())
+	if err != nil {
+		log.Error(err)
+		os.Exit(err.ExitStatus())
+	}
+	log.Debugf("Setting up Pixie client with cluster-id %s\n", cfg.Pixie().ClusterID())
+	vz, err := setupPixie(ctx, cfg.Pixie())
+	if err != nil {
+		log.Error(err)
+		os.Exit(err.ExitStatus())
+	}
+	var wg sync.WaitGroup
+	runWorkers(ctx, cfg.Worker(), vz, exporter, &wg)
+	go func() {
+		c := make(chan os.Signal, 1)
+		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+		<-c
+		cancel()
+	}()
+	wg.Wait()
+}
+
+func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter, wg *sync.WaitGroup) {
+	w := worker.Build(ctx, cfg, vz, exporter)
+	go w.Spans(adapter.HTTPSpans, wg)
+	go w.Spans(adapter.MySQL, wg)
+	go w.Spans(adapter.PgSQL, wg)
+	go w.Metrics(adapter.HTTPMetrics, wg)
+	go w.Metrics(adapter.JVM, wg)
+	wg.Add(5)
+}
+
+func setupPixie(ctx context.Context, cfg config.Pixie) (*pxapi.VizierClient, errors.Error) {
+	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()))
+	if err != nil {
+		return nil, errors.ConnectionError(err.Error())
+	}
+	vz, err := client.NewVizierClient(ctx, cfg.ClusterID())
+	if err != nil {
+		return nil, errors.ConnectionError(err.Error())
+	}
+	return vz, nil
 }

@@ -2,7 +2,8 @@ package worker
 
 import (
 	"context"
-	"fmt"
+
+	"github.com/newrelic/newrelic-pixie-integration/internal/errors"
 
 	"github.com/newrelic/newrelic-pixie-integration/internal/adapter"
 	"github.com/newrelic/newrelic-pixie-integration/internal/exporter"
@@ -14,7 +15,7 @@ import (
 
 type customHandler interface {
 	pxapi.TableRecordHandler
-	send(exporter.Exporter) int64
+	send(exporter.Exporter) (int64, errors.Error)
 }
 
 type ResultMuxer struct {
@@ -69,26 +70,32 @@ func (h *spansHandler) HandleRecord(ctx context.Context, r *types.Record) error 
 	return nil
 }
 
-func (h *spansHandler) send(exporter exporter.Exporter) int64 {
+func (h *spansHandler) send(exporter exporter.Exporter) (int64, errors.Error) {
+	if len(h.spans) == 0 {
+		return 0, nil
+	}
+	defer func() {
+		h.spans = h.spans[:0]
+	}()
 	handled := h.recordsHandled
 	h.recordsHandled = 0
-	if len(h.spans) > 0 {
-		if err := exporter.SendSpans(h.spans); err != nil {
-			fmt.Printf("Error sending spans: %v", err)
-		}
-		h.spans = h.spans[:0]
+	if err := exporter.SendSpans(h.spans); err != nil {
+		return 0, err
 	}
-	return handled
+	return handled, nil
 }
 
-func (h *metricsHandler) send(exporter exporter.Exporter) int64 {
+func (h *metricsHandler) send(exporter exporter.Exporter) (int64, errors.Error) {
+	if len(h.metrics) == 0 {
+		return 0, nil
+	}
+	defer func() {
+		h.metrics = h.metrics[:0]
+	}()
 	handled := h.recordsHandled
 	h.recordsHandled = 0
-	if len(h.metrics) > 0 {
-		if err := exporter.SendMetrics(h.metrics); err != nil {
-			fmt.Printf("Error sending spans: %v", err)
-		}
-		h.metrics = h.metrics[:0]
+	if err := exporter.SendMetrics(h.metrics); err != nil {
+		return 0, err
 	}
-	return handled
+	return handled, nil
 }
