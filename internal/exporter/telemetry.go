@@ -5,6 +5,7 @@ import (
 	"crypto/tls"
 	"fmt"
 
+	"github.com/newrelic/infrastructure-agent/pkg/license"
 	colmetricpb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	metricpb "go.opentelemetry.io/proto/otlp/metrics/v1"
@@ -13,6 +14,9 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 )
+
+
+
 
 type openTelemetry struct {
 	ctx           context.Context
@@ -37,6 +41,8 @@ func (e *openTelemetry) SendSpans(spans []*tracepb.ResourceSpans) error {
 }
 
 func createConnection(ctx context.Context, endpoint string, apiKey string) (*grpc.ClientConn, context.Context, error) {
+	region := license.GetRegion(apiKey)
+	fmt.Println("[REGION] " + region)
 	outgoingCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("api-key", apiKey))
 	var opts []grpc.DialOption
 	tlsDialOption := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{}))
