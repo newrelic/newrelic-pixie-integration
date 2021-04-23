@@ -39,10 +39,6 @@ setup:
 build-container:
 	sh scripts/build-container.sh $(DOCKER_IMAGE_NAME) $(DOCKER_IMAGE_TAG)
 
-.PHONY: build-container-debug
-build-container-debug:
-	docker build -f Dockerfile.debug  -t $(DOCKER_IMAGE_NAME):debug .
-
 
 
 
