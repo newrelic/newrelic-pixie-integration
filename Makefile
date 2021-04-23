@@ -19,7 +19,7 @@ fmt:
 
 .PHONY: lint
 lint:
-	sh scripts/lint.sh
+	-sh scripts/lint.sh
 
 config=env.list
 .PHONY: run
