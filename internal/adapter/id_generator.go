@@ -1,4 +1,4 @@
-package main
+package adapter
 
 import (
 	crand "crypto/rand"
@@ -20,7 +20,7 @@ type randomIDGenerator struct {
 
 var _ IDGenerator = &randomIDGenerator{}
 
-// NewSpanID returns a non-zero span ID from a randomly-chosen sequence.
+// NewSpanID returns a non-zero adapter ID from a randomly-chosen sequence.
 func (gen *randomIDGenerator) NewSpanID() SpanID {
 	gen.Lock()
 	defer gen.Unlock()
@@ -29,7 +29,7 @@ func (gen *randomIDGenerator) NewSpanID() SpanID {
 	return sid
 }
 
-// NewIDs returns a non-zero trace ID and a non-zero span ID from a
+// NewIDs returns a non-zero trace ID and a non-zero adapter ID from a
 // randomly-chosen sequence.
 func (gen *randomIDGenerator) NewTraceID() TraceID {
 	gen.Lock()
