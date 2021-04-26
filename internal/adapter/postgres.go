@@ -32,36 +32,34 @@ func (a *pogsql) Script() string {
 	return pgsqllPXL
 }
 
-func (a *pogsql) Adapt(r *types.Record) (*tracepb.ResourceSpans, error) {
+func (a *pogsql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	spanID := idGenerator.NewSpanID()
 	traceID := idGenerator.NewTraceID()
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	duration := time.Duration(r.GetDatum("latency").(*types.Int64Value).Value())
-	return &tracepb.ResourceSpans{
-		Resource: createResource(r, a.clusterName),
-		InstrumentationLibrarySpans: []*tracepb.InstrumentationLibrarySpans{
-			{
-				InstrumentationLibrary: instrumentationLibrary,
-				Spans: []*tracepb.Span{
-					{
-						TraceId:           traceID[:],
-						SpanId:            spanID[:],
-						TraceState:        "",
-						ParentSpanId:      nil,
-						Kind:              tracepb.Span_SPAN_KIND_CLIENT,
-						StartTimeUnixNano: uint64(timestamp.UnixNano()),
-						EndTimeUnixNano:   uint64(timestamp.UnixNano() + duration.Nanoseconds()),
-						Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_UNSET},
-						Name:              r.GetDatum("req").String(),
-						Attributes: []*commonpb.KeyValue{
-							{
-								Key:   "db.system",
-								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: "postgres"}},
-							},
+	resources := createResources(r, a.clusterName)
+	return createArrayOfSpans(resources, []*tracepb.InstrumentationLibrarySpans{
+		{
+			InstrumentationLibrary: instrumentationLibrary,
+			Spans: []*tracepb.Span{
+				{
+					TraceId:           traceID[:],
+					SpanId:            spanID[:],
+					TraceState:        "",
+					ParentSpanId:      nil,
+					Kind:              tracepb.Span_SPAN_KIND_CLIENT,
+					StartTimeUnixNano: uint64(timestamp.UnixNano()),
+					EndTimeUnixNano:   uint64(timestamp.UnixNano() + duration.Nanoseconds()),
+					Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_UNSET},
+					Name:              r.GetDatum("req").String(),
+					Attributes: []*commonpb.KeyValue{
+						{
+							Key:   "db.system",
+							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: "postgres"}},
 						},
 					},
 				},
 			},
 		},
-	}, nil
+	}), nil
 }

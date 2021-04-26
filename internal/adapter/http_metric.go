@@ -49,46 +49,46 @@ func (a *httpMetrics) Script() string {
 	return httpMetricsPXL
 }
 
-func (a *httpMetrics) Adapt(r *types.Record) (*metricpb.ResourceMetrics, error) {
+func (a *httpMetrics) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 	timestamp := r.GetDatum("timestamp").(*types.Time64NSValue).Value()
 	statusCode := r.GetDatum("status_code").(*types.Int64Value).Value()
 	latMin := float64(r.GetDatum("latency_min").(*types.Int64Value).Value()) / 1000000
 	latMax := float64(r.GetDatum("latency_max").(*types.Int64Value).Value()) / 1000000
 	latSum := float64(r.GetDatum("latency_sum").(*types.Int64Value).Value()) / 1000000
 	latCount := float64(r.GetDatum("latency_count").(*types.Int64Value).Value())
-	return &metricpb.ResourceMetrics{
-		Resource: createResource(r, a.clusterName),
-		InstrumentationLibraryMetrics: []*metricpb.InstrumentationLibraryMetrics{
-			{
-				InstrumentationLibrary: instrumentationLibrary,
-				Metrics: []*metricpb.Metric{
-					{
-						Name:        "http.server.duration",
-						Description: "measures the duration of the inbound HTTP request",
-						Unit:        "ms",
-						Data: &metricpb.Metric_DoubleSummary{
-							DoubleSummary: &metricpb.DoubleSummary{
-								DataPoints: []*metricpb.DoubleSummaryDataPoint{
-									{
-										Labels: []*commonpb.StringKeyValue{
-											{
-												Key:   "http.status_code",
-												Value: strconv.Itoa(int(statusCode)),
-											},
+
+	resources := createResources(r, a.clusterName)
+
+	return createArrayOfMetrics(resources, []*metricpb.InstrumentationLibraryMetrics{
+		{
+			InstrumentationLibrary: instrumentationLibrary,
+			Metrics: []*metricpb.Metric{
+				{
+					Name:        "http.server.duration",
+					Description: "measures the duration of the inbound HTTP request",
+					Unit:        "ms",
+					Data: &metricpb.Metric_DoubleSummary{
+						DoubleSummary: &metricpb.DoubleSummary{
+							DataPoints: []*metricpb.DoubleSummaryDataPoint{
+								{
+									Labels: []*commonpb.StringKeyValue{
+										{
+											Key:   "http.status_code",
+											Value: strconv.Itoa(int(statusCode)),
 										},
-										StartTimeUnixNano: uint64(timestamp.UnixNano()),
-										TimeUnixNano:      uint64(timestamp.UnixNano() + (10 * time.Second).Nanoseconds()),
-										Count:             uint64(latCount),
-										Sum:               latSum,
-										QuantileValues: []*metricpb.DoubleSummaryDataPoint_ValueAtQuantile{
-											{
-												Quantile: 0.0,
-												Value:    latMin,
-											},
-											{
-												Quantile: 1.0,
-												Value:    latMax,
-											},
+									},
+									StartTimeUnixNano: uint64(timestamp.UnixNano()),
+									TimeUnixNano:      uint64(timestamp.UnixNano() + (10 * time.Second).Nanoseconds()),
+									Count:             uint64(latCount),
+									Sum:               latSum,
+									QuantileValues: []*metricpb.DoubleSummaryDataPoint_ValueAtQuantile{
+										{
+											Quantile: 0.0,
+											Value:    latMin,
+										},
+										{
+											Quantile: 1.0,
+											Value:    latMax,
 										},
 									},
 								},
@@ -98,5 +98,5 @@ func (a *httpMetrics) Adapt(r *types.Record) (*metricpb.ResourceMetrics, error) 
 				},
 			},
 		},
-	}, nil
+	}), nil
 }
