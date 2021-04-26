@@ -15,7 +15,10 @@ import (
 	"px.dev/pxapi"
 )
 
-const defaultSleepTime = 10 * time.Second
+const (
+	defaultSleepTime = 10 * time.Second
+	maxExecutionTime = 8 * time.Second
+)
 
 type Worker interface {
 	Spans(adapter.SpansAdapter, *sync.WaitGroup)
@@ -77,21 +80,31 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			wg.Done()
 			return
 		default:
-			log.Debugf("executing Pixie script %s\n", name)
-			resultSet, err := vz.ExecuteScript(ctx, script, rm)
-			if err != nil && err != io.EOF {
-				log.Errorf("error while executing Pixie script: %s", err)
+			ch := make(chan bool, 1)
+			go func() {
+				log.Debugf("executing Pixie script %s\n", name)
+				resultSet, err := vz.ExecuteScript(ctx, script, rm)
+				if err != nil && err != io.EOF {
+					log.Errorf("error while executing Pixie script: %s", err)
+				}
+				log.Debugf("streaming results for %s\n", name)
+				if err := resultSet.Stream(); err != nil {
+					log.Warnf("Pixie streaming error: %s", err)
+				}
+				if records, err := h.send(exporter); err != nil {
+					log.Warnf(err.Error())
+				} else {
+					log.Debugf("done streaming %d results for %s\n", records, name)
+				}
+				resultSet.Close()
+				ch <- true
+			}()
+			select {
+			case <-ch:
+				log.Debugf("execution completed successfully!")
+			case <-time.After(maxExecutionTime):
+				log.Warnf("execution out of time")
 			}
-			log.Debugf("streaming results for %s\n", name)
-			if err := resultSet.Stream(); err != nil {
-				log.Warnf("Pixie streaming error: %s", err)
-			}
-			if records, err := h.send(exporter); err != nil {
-				log.Warnf(err.Error())
-			} else {
-				log.Debugf("done streaming %d results for %s\n", records, name)
-			}
-			resultSet.Close()
 			time.Sleep(defaultSleepTime)
 		}
 	}
