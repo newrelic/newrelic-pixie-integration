@@ -2,11 +2,11 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
 	"github.com/newrelic/infrastructure-agent/pkg/log"
 	"github.com/newrelic/newrelic-pixie-integration/internal/adapter"
@@ -16,12 +16,10 @@ import (
 	"px.dev/pxapi"
 )
 
-var metricsWorker = []adapter.MetricsAdapter{
-	adapter.HTTPMetrics,
-	adapter.JVM,
-}
-
-var spansWorker = []adapter.SpansAdapter{}
+const (
+	defaultRetries   = 100
+	defaultSleepTime = 10 * time.Second
+)
 
 func main() {
 	ctx := context.Background()
@@ -32,14 +30,13 @@ func main() {
 		log.Error(err)
 		os.Exit(1)
 	}
-	log.Debug("Setting up OTLP exporter")
-	exporter, err := exporter.New(ctx, cfg.Exporter())
+	exporter, err := setExporterConnection(ctx, cfg.Exporter(), defaultRetries, defaultSleepTime)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
 	}
 	log.Debugf("Setting up Pixie client with cluster-id %s\n", cfg.Pixie().ClusterID())
-	vz, err := setupPixie(ctx, cfg.Pixie())
+	vz, err := setupPixie(ctx, cfg.Pixie(), defaultRetries, defaultSleepTime)
 	if err != nil {
 		log.Error(err)
 		os.Exit(1)
@@ -65,14 +62,35 @@ func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, 
 	wg.Add(5)
 }
 
-func setupPixie(ctx context.Context, cfg config.Pixie) (*pxapi.VizierClient, error) {
-	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()))
-	if err != nil {
-		return nil, fmt.Errorf("error creating Pixie API client: %w", err)
+func setExporterConnection(ctx context.Context, cfg config.Exporter, tries int, sleepTime time.Duration) (exp exporter.Exporter, err error) {
+	log.Debug("Setting up OTLP exporter")
+	for tries > 0 {
+		exp, err = exporter.New(ctx, cfg)
+		if err == nil {
+			return
+		}
+		tries -= 1
+		log.Warning(err)
+		time.Sleep(sleepTime)
 	}
-	vz, err := client.NewVizierClient(ctx, cfg.ClusterID())
-	if err != nil {
-		return nil, fmt.Errorf("error creating Pixie Vizier client: %w", err)
+
+	return
+}
+
+func setupPixie(ctx context.Context, cfg config.Pixie, tries int, sleepTime time.Duration) (vz *pxapi.VizierClient, err error) {
+	var client *pxapi.Client
+	for tries > 0 {
+		client, err = pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()))
+		if err == nil {
+			vz, err = client.NewVizierClient(ctx, cfg.ClusterID())
+			if err == nil {
+				return
+			}
+		}
+		tries -= 1
+		log.Warning(err)
+		time.Sleep(sleepTime)
 	}
-	return vz, nil
+
+	return
 }
