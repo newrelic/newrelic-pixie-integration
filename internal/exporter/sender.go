@@ -4,7 +4,6 @@ import (
 	"context"
 
 	"github.com/newrelic/newrelic-pixie-integration/internal/config"
-	"github.com/newrelic/newrelic-pixie-integration/internal/errors"
 
 	colmetricpb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
@@ -13,11 +12,11 @@ import (
 )
 
 type Exporter interface {
-	SendMetrics(metrics []*metricpb.ResourceMetrics) errors.Error
-	SendSpans(spans []*tracepb.ResourceSpans) errors.Error
+	SendMetrics(metrics []*metricpb.ResourceMetrics) error
+	SendSpans(spans []*tracepb.ResourceSpans) error
 }
 
-func New(ctx context.Context, cfg config.Exporter) (Exporter, errors.Error) {
+func New(ctx context.Context, cfg config.Exporter) (Exporter, error) {
 	conn, outgoingCtx, err := createConnection(ctx, cfg.Endpoint(), cfg.LicenseKey())
 	if err != nil {
 		return nil, err

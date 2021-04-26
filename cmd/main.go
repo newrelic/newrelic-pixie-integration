@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,7 +11,6 @@ import (
 	"github.com/newrelic/infrastructure-agent/pkg/log"
 	"github.com/newrelic/newrelic-pixie-integration/internal/adapter"
 	"github.com/newrelic/newrelic-pixie-integration/internal/config"
-	"github.com/newrelic/newrelic-pixie-integration/internal/errors"
 	"github.com/newrelic/newrelic-pixie-integration/internal/exporter"
 	"github.com/newrelic/newrelic-pixie-integration/internal/worker"
 	"px.dev/pxapi"
@@ -30,19 +30,19 @@ func main() {
 	cfg, err := config.GetConfig()
 	if err != nil {
 		log.Error(err)
-		os.Exit(err.ExitStatus())
+		os.Exit(1)
 	}
 	log.Debug("Setting up OTLP exporter")
 	exporter, err := exporter.New(ctx, cfg.Exporter())
 	if err != nil {
 		log.Error(err)
-		os.Exit(err.ExitStatus())
+		os.Exit(1)
 	}
 	log.Debugf("Setting up Pixie client with cluster-id %s\n", cfg.Pixie().ClusterID())
 	vz, err := setupPixie(ctx, cfg.Pixie())
 	if err != nil {
 		log.Error(err)
-		os.Exit(err.ExitStatus())
+		os.Exit(1)
 	}
 	var wg sync.WaitGroup
 	runWorkers(ctx, cfg.Worker(), vz, exporter, &wg)
@@ -65,14 +65,14 @@ func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, 
 	wg.Add(5)
 }
 
-func setupPixie(ctx context.Context, cfg config.Pixie) (*pxapi.VizierClient, errors.Error) {
+func setupPixie(ctx context.Context, cfg config.Pixie) (*pxapi.VizierClient, error) {
 	client, err := pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()))
 	if err != nil {
-		return nil, errors.ConnectionError(err.Error())
+		return nil, fmt.Errorf("error creating Pixie API client: %w", err)
 	}
 	vz, err := client.NewVizierClient(ctx, cfg.ClusterID())
 	if err != nil {
-		return nil, errors.ConnectionError(err.Error())
+		return nil, fmt.Errorf("error creating Pixie Vizier client: %w", err)
 	}
 	return vz, nil
 }

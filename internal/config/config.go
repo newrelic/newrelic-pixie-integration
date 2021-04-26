@@ -8,7 +8,6 @@ import (
 
 	"github.com/newrelic/infrastructure-agent/pkg/license"
 	"github.com/newrelic/infrastructure-agent/pkg/log"
-	"github.com/newrelic/newrelic-pixie-integration/internal/errors"
 	"github.com/sirupsen/logrus"
 )
 
@@ -37,15 +36,15 @@ var (
 	instance Config
 )
 
-func GetConfig() (Config, errors.Error) {
-	var err errors.Error
+func GetConfig() (Config, error) {
+	var err error
 	once.Do(func() {
 		err = setUpConfig()
 	})
 	return instance, err
 }
 
-func setUpConfig() errors.Error {
+func setUpConfig() error {
 	if strings.EqualFold(os.Getenv(envVerbose), boolTrue) {
 		log.SetLevel(logrus.DebugLevel)
 	}
@@ -54,10 +53,10 @@ func setUpConfig() errors.Error {
 	pixieClusterID := os.Getenv(envPixieClusterID)
 	pixieAPIKey := os.Getenv(envPixieAPIKey)
 	clusterName := os.Getenv(envClusterName)
-	var err errors.Error
+	var err error
 	nrHostname, err = getEndpoint(nrHostname, nrLicenseKey)
 	if err != nil {
-		return err
+		return fmt.Errorf("error getting endpoint for license: %w", err)
 	}
 	instance = &config{
 		settings: &settings{
@@ -86,7 +85,7 @@ type Config interface {
 	Exporter() Exporter
 	Pixie() Pixie
 	Worker() Worker
-	validate() errors.Error
+	validate() error
 }
 
 type config struct {
@@ -97,12 +96,12 @@ type config struct {
 	settings Settings
 }
 
-func (c *config) validate() errors.Error {
+func (c *config) validate() error {
 	if err := c.Pixie().validate(); err != nil {
-		return err
+		return fmt.Errorf("error validating pixie config: %w", err)
 	}
 	if err := c.Worker().validate(); err != nil {
-		return err
+		return fmt.Errorf("error validating worker config: %w", err)
 	}
 	return c.Exporter().validate()
 }
@@ -154,7 +153,7 @@ func (s *settings) BuildDate() string {
 type Exporter interface {
 	LicenseKey() string
 	Endpoint() string
-	validate() errors.Error
+	validate() error
 }
 
 type exporter struct {
@@ -162,9 +161,9 @@ type exporter struct {
 	endpoint   string
 }
 
-func (e *exporter) validate() errors.Error {
+func (e *exporter) validate() error {
 	if e.licenseKey == "" {
-		return errors.ConfigurationError(fmt.Sprintf("missing required env variable '%s", envNRLicenseKEy))
+		return fmt.Errorf("missing required env variable '%s", envNRLicenseKEy)
 	}
 	return nil
 }
@@ -180,7 +179,7 @@ func (e *exporter) Endpoint() string {
 type Pixie interface {
 	APIKey() string
 	ClusterID() string
-	validate() errors.Error
+	validate() error
 }
 
 type pixie struct {
@@ -188,12 +187,12 @@ type pixie struct {
 	clusterID string
 }
 
-func (p *pixie) validate() errors.Error {
+func (p *pixie) validate() error {
 	if p.apiKey == "" {
-		return errors.ConfigurationError(fmt.Sprintf("missing required env variable '%s", envPixieAPIKey))
+		return fmt.Errorf("missing required env variable '%s", envPixieAPIKey)
 	}
 	if p.clusterID == "" {
-		return errors.ConfigurationError(fmt.Sprintf("missing required env variable '%s", envPixieClusterID))
+		return fmt.Errorf("missing required env variable '%s", envPixieClusterID)
 	}
 	return nil
 }
@@ -208,16 +207,16 @@ func (p *pixie) ClusterID() string {
 
 type Worker interface {
 	ClusterName() string
-	validate() errors.Error
+	validate() error
 }
 
 type worker struct {
 	clusterName string
 }
 
-func (a *worker) validate() errors.Error {
+func (a *worker) validate() error {
 	if a.clusterName == "" {
-		return errors.ConfigurationError(fmt.Sprintf("missing required env variable '%s", envClusterName))
+		return fmt.Errorf("missing required env variable '%s", envClusterName)
 	}
 	return nil
 }
@@ -226,15 +225,15 @@ func (a *worker) ClusterName() string {
 	return a.clusterName
 }
 
-func getEndpoint(hostname, licenseKey string) (string, errors.Error) {
+func getEndpoint(hostname, licenseKey string) (string, error) {
 	if hostname != "" {
-		log.Debugf("spans & metrics will be sent to endpoint %s", hostname)
+		log.Debugf("spans & metrics will be %s", hostname)
 		return hostname, nil
 	}
 	nrRegion := license.GetRegion(licenseKey)
 	endpoint, ok := endpoints[strings.ToLower(nrRegion)]
 	if !ok {
-		return "", errors.ConfigurationError("the provided license key doesn't belong to a known New Relic region")
+		return "", fmt.Errorf("the provided license key doesn't belong to a known New Relic region")
 	}
 	log.Debugf("spans & metrics will be sent to endpoint %s", endpoint)
 	return endpoint, nil
