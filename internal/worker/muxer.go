@@ -3,8 +3,6 @@ package worker
 import (
 	"context"
 
-	"github.com/newrelic/newrelic-pixie-integration/internal/errors"
-
 	"github.com/newrelic/newrelic-pixie-integration/internal/adapter"
 	"github.com/newrelic/newrelic-pixie-integration/internal/exporter"
 	metricpb "go.opentelemetry.io/proto/otlp/metrics/v1"
@@ -15,7 +13,7 @@ import (
 
 type customHandler interface {
 	pxapi.TableRecordHandler
-	send(exporter.Exporter) (int64, errors.Error)
+	send(exporter.Exporter) (int64, error)
 }
 
 type ResultMuxer struct {
@@ -70,7 +68,7 @@ func (h *spansHandler) HandleRecord(ctx context.Context, r *types.Record) error 
 	return nil
 }
 
-func (h *spansHandler) send(exporter exporter.Exporter) (int64, errors.Error) {
+func (h *spansHandler) send(exporter exporter.Exporter) (int64, error) {
 	if len(h.spans) == 0 {
 		return 0, nil
 	}
@@ -85,7 +83,7 @@ func (h *spansHandler) send(exporter exporter.Exporter) (int64, errors.Error) {
 	return handled, nil
 }
 
-func (h *metricsHandler) send(exporter exporter.Exporter) (int64, errors.Error) {
+func (h *metricsHandler) send(exporter exporter.Exporter) (int64, error) {
 	if len(h.metrics) == 0 {
 		return 0, nil
 	}
