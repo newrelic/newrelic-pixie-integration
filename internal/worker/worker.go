@@ -64,12 +64,11 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 	defer func() {
 		if err := recover(); err != nil {
 			log.Warn(err)
-			log.Infof("sleep 30 seconds to be recovered")
-			time.Sleep(30 * time.Second)
+			log.Infof("sleep 10 seconds to be recovered")
+			time.Sleep(defaultSleepTime)
 			run(ctx, wg, name, script, vz, h, exporter)
 		}
 	}()
-
 	rm := &ResultMuxer{h}
 	for {
 		select {
