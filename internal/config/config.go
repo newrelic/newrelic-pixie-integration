@@ -30,9 +30,8 @@ var (
 	gitCommit          = ""
 	buildDate          = ""
 	endpoints          = map[string]string{
-		"eu":  endpointEU,
-		"usa": endpointUSA,
-		"":    endpointStg,
+		"eu": endpointEU,
+		"":   endpointUSA,
 	}
 	once     sync.Once
 	instance Config
