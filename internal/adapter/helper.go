@@ -2,7 +2,11 @@ package adapter
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
+
+	metricpb "go.opentelemetry.io/proto/otlp/metrics/v1"
+	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
@@ -16,10 +20,26 @@ const (
 	colContainer = "container"
 )
 
-func takeNamespaceServiceAndPod(r *types.Record) (ns string, srv string, pod string) {
+var regExpIsArray = regexp.MustCompilePOSIX(`\[((\"[a-zA-Z0-9\-\/._]+\")+,)*(\"[a-zA-Z0-9\-\/._]+\")\]`)
+
+type rootAttributes struct {
+	namespace string
+	service   string
+	pod       string
+}
+
+func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, pod string) {
 	ns = r.GetDatum(colNamespace).String()
 	nsPrefix := fmt.Sprintf("%s/", ns)
-	srv = strings.TrimPrefix(r.GetDatum(colService).String(), nsPrefix)
+	srv := r.GetDatum(colService).String()
+	if regExpIsArray.MatchString(srv) {
+		services = strings.Split(srv[1:len(srv)-1], ",")
+		for i, name := range services {
+			services[i] = strings.TrimPrefix(name[1:len(name)-1], nsPrefix)
+		}
+	} else {
+		services = []string{strings.TrimPrefix(srv, nsPrefix)}
+	}
 	pod = strings.TrimPrefix(r.GetDatum(colPod).String(), nsPrefix)
 	return
 }
@@ -34,18 +54,14 @@ func cleanNamespacePrefix(r *types.Record, colNames ...string) []string {
 	return out
 }
 
-func createResource(r *types.Record, cluster string) *resourcepb.Resource {
-	namespace, service, pod := takeNamespaceServiceAndPod(r)
-	return &resourcepb.Resource{
+func creteResourceFunc(r *types.Record, pod, namespace, cluster string) func([]string) []resourcepb.Resource {
+	resource := resourcepb.Resource{
 		Attributes: []*commonpb.KeyValue{
 			{
 				Key:   "instrumentation.provider",
 				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: instrumentationName}},
 			},
-			{
-				Key:   "service.name",
-				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: service}},
-			},
+
 			{
 				Key:   "k8s.namespace.name",
 				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: namespace}},
@@ -60,7 +76,7 @@ func createResource(r *types.Record, cluster string) *resourcepb.Resource {
 			},
 			{
 				Key:   "k8s.container.name",
-				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: r.GetDatum("container").String()}},
+				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: r.GetDatum(colContainer).String()}},
 			},
 			{
 				Key:   "k8s.cluster.name",
@@ -68,4 +84,42 @@ func createResource(r *types.Record, cluster string) *resourcepb.Resource {
 			},
 		},
 	}
+	return func(services []string) []resourcepb.Resource {
+		output := make([]resourcepb.Resource, len(services))
+		for i, service := range services {
+			resource.Attributes = append(resource.Attributes, &commonpb.KeyValue{
+				Key:   "service.name",
+				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: service}},
+			})
+			output[i] = resource
+		}
+		return output
+	}
+}
+
+func createResources(r *types.Record, cluster string) []resourcepb.Resource {
+	namespace, services, pod := takeNamespaceServiceAndPod(r)
+	return creteResourceFunc(r, namespace, pod, cluster)(services)
+}
+
+func createArrayOfSpans(resources []resourcepb.Resource, il []*tracepb.InstrumentationLibrarySpans) []*tracepb.ResourceSpans {
+	spans := make([]*tracepb.ResourceSpans, len(resources))
+	for i := range resources {
+		spans[i] = &tracepb.ResourceSpans{
+			Resource:                    &resources[i],
+			InstrumentationLibrarySpans: il,
+		}
+	}
+	return spans
+}
+
+func createArrayOfMetrics(resources []resourcepb.Resource, il []*metricpb.InstrumentationLibraryMetrics) []*metricpb.ResourceMetrics {
+	metrics := make([]*metricpb.ResourceMetrics, len(resources))
+	for i := range resources {
+		metrics[i] = &metricpb.ResourceMetrics{
+			Resource:                      &resources[i],
+			InstrumentationLibraryMetrics: il,
+		}
+	}
+	return metrics
 }

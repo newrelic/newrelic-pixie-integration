@@ -85,19 +85,17 @@ func (a *jvm) Script() string {
 	return jvmPXL
 }
 
-func (a *jvm) Adapt(r *types.Record) (*metricpb.ResourceMetrics, error) {
+func (a *jvm) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
-	m := &metricpb.ResourceMetrics{
-		Resource:                      createResource(r, a.clusterName),
-		InstrumentationLibraryMetrics: make([]*metricpb.InstrumentationLibraryMetrics, len(metricMapping)),
-	}
+	instrumentationLibraries := make([]*metricpb.InstrumentationLibraryMetrics, len(metricMapping))
+	resources := createResources(r, a.clusterName)
 	index := 0
 	for metricName, def := range metricMapping {
 		value, err := getValueFromJVMMetric(r, metricName)
 		if err != nil {
 			return nil, err
 		}
-		m.InstrumentationLibraryMetrics[index] = &metricpb.InstrumentationLibraryMetrics{
+		instrumentationLibraries[index] = &metricpb.InstrumentationLibraryMetrics{
 			InstrumentationLibrary: instrumentationLibrary,
 			Metrics: []*metricpb.Metric{
 				{
@@ -119,7 +117,7 @@ func (a *jvm) Adapt(r *types.Record) (*metricpb.ResourceMetrics, error) {
 			},
 		}
 	}
-	return m, nil
+	return createArrayOfMetrics(resources, instrumentationLibraries), nil
 }
 
 func getValueFromJVMMetric(r *types.Record, metricName string) (float64, error) {

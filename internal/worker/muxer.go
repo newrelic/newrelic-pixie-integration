@@ -56,7 +56,7 @@ func (w *metricsHandler) HandleRecord(ctx context.Context, r *types.Record) erro
 	if err != nil {
 		return err
 	}
-	w.metrics = append(w.metrics, metrics)
+	w.metrics = append(w.metrics, metrics...)
 	return nil
 }
 
@@ -66,7 +66,7 @@ func (h *spansHandler) HandleRecord(ctx context.Context, r *types.Record) error 
 	if err != nil {
 		return err
 	}
-	h.spans = append(h.spans, spans)
+	h.spans = append(h.spans, spans...)
 	return nil
 }
 

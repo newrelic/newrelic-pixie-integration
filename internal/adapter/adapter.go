@@ -20,13 +20,13 @@ var (
 type MetricsAdapter interface {
 	ID() string
 	Script() string
-	Adapt(r *types.Record) (*metricpb.ResourceMetrics, error)
+	Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error)
 }
 
 type SpansAdapter interface {
 	ID() string
 	Script() string
-	Adapt(r *types.Record) (*tracepb.ResourceSpans, error)
+	Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error)
 }
 
 var (
