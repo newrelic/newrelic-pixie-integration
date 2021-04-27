@@ -54,7 +54,7 @@ func cleanNamespacePrefix(r *types.Record, colNames ...string) []string {
 	return out
 }
 
-func creteResourceFunc(r *types.Record, pod, namespace, cluster string) func([]string) []resourcepb.Resource {
+func creteResourceFunc(r *types.Record, namespace, pod, cluster string) func([]string) []resourcepb.Resource {
 	resource := resourcepb.Resource{
 		Attributes: []*commonpb.KeyValue{
 			{
