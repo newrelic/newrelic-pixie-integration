@@ -17,7 +17,7 @@ import (
 
 const (
 	defaultSleepTime = 10 * time.Second
-	maxExecutionTime = 8 * time.Second
+	maxExecutionTime = 10 * time.Second
 )
 
 type Worker interface {
@@ -74,6 +74,7 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 	}()
 	rm := &ResultMuxer{h}
 	for {
+		var resultSet *pxapi.ScriptResults
 		select {
 		case <-ctx.Done():
 			log.Infof("leaving worker for %s", name)
@@ -81,9 +82,10 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			return
 		default:
 			ch := make(chan bool, 1)
+			pixieCtx, cancelFn := context.WithCancel(ctx)
 			go func() {
 				log.Debugf("executing Pixie script %s\n", name)
-				resultSet, err := vz.ExecuteScript(ctx, script, rm)
+				resultSet, err := vz.ExecuteScript(pixieCtx, script, rm)
 				if err != nil && err != io.EOF {
 					log.Errorf("error while executing Pixie script: %s", err)
 				}
@@ -96,14 +98,17 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 				} else {
 					log.Debugf("done streaming %d results for %s\n", records, name)
 				}
-				resultSet.Close()
 				ch <- true
 			}()
 			select {
 			case <-ch:
-				log.Debugf("execution completed successfully!")
+				log.Debugf("execution completed successfully for %s!", name)
 			case <-time.After(maxExecutionTime):
-				log.Warnf("execution out of time")
+				cancelFn()
+				log.Warnf("execution out of time for %s!", name)
+			}
+			if resultSet != nil {
+				resultSet.Close()
 			}
 			time.Sleep(defaultSleepTime)
 		}

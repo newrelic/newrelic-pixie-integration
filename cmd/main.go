@@ -86,9 +86,8 @@ func setupPixie(ctx context.Context, cfg config.Pixie, tries int, sleepTime time
 			vz, err = client.NewVizierClient(ctx, cfg.ClusterID())
 			if err == nil {
 				return
-			} else {
-				err = fmt.Errorf("error creating Pixie Vizier client: %w", err)
 			}
+			err = fmt.Errorf("error creating Pixie Vizier client: %w", err)
 		} else {
 			err = fmt.Errorf("error creating Pixie API client: %w", err)
 		}

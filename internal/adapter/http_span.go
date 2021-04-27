@@ -39,7 +39,7 @@ type httpSpans struct {
 }
 
 func (a *httpSpans) ID() string {
-	return "http_metrics"
+	return "http_spans"
 }
 
 func (a *httpSpans) Script() string {
