@@ -55,11 +55,11 @@ func main() {
 
 func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter, wg *sync.WaitGroup) {
 	w := worker.Build(ctx, cfg, vz, exporter)
-	go w.Spans(adapter.HTTPSpans, wg)
-	go w.Spans(adapter.MySQL, wg)
-	go w.Spans(adapter.PgSQL, wg)
-	go w.Metrics(adapter.HTTPMetrics, wg)
-	go w.Metrics(adapter.JVM, wg)
+	go w.Spans(adapter.HTTPSpans(cfg.ClusterName()), wg)
+	go w.Spans(adapter.MySQL(cfg.ClusterName()), wg)
+	go w.Spans(adapter.PgSQL(cfg.ClusterName()), wg)
+	go w.Metrics(adapter.HTTPMetrics(cfg.ClusterName()), wg)
+	go w.Metrics(adapter.JVM(cfg.ClusterName()), wg)
 	wg.Add(5)
 }
 

@@ -9,5 +9,3 @@ COPY . ./
 RUN go build cmd/main.go ; mv main newrelic-pixie-integration
 
 CMD ./newrelic-pixie-integration
-
-

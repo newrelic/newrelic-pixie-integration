@@ -29,10 +29,22 @@ type SpansAdapter interface {
 	Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error)
 }
 
-var (
-	JVM         = &jvm{}
-	HTTPMetrics = &httpMetrics{}
-	HTTPSpans   = &httpSpans{}
-	MySQL       = &mysql{}
-	PgSQL       = &pogsql{}
-)
+func JVM(clusterName string) MetricsAdapter {
+	return &jvm{clusterName}
+}
+
+func HTTPMetrics(clusterName string) MetricsAdapter {
+	return &httpMetrics{clusterName}
+}
+
+func HTTPSpans(clusterName string) SpansAdapter {
+	return &httpSpans{clusterName}
+}
+
+func MySQL(clusterName string) SpansAdapter {
+	return &mysql{clusterName}
+}
+
+func PgSQL(clusterName string) SpansAdapter {
+	return &pogsql{clusterName}
+}
