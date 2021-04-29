@@ -1,4 +1,5 @@
-FROM golang:1.15
+ARG GOLANG_VERSION=1.16
+FROM golang:${GOLANG_VERSION}
 
 RUN mkdir newrelic-pixie-integration
 WORKDIR newrelic-pixie-integration

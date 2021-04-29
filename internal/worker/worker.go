@@ -2,6 +2,7 @@ package worker
 
 import (
 	"context"
+	"fmt"
 	"io"
 	"sync"
 	"time"
@@ -43,9 +44,7 @@ func Build(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, expor
 
 func (w *worker) Metrics(adapter adapter.MetricsAdapter, wg *sync.WaitGroup) {
 	h := &metricsHandler{
-		handler: &handler{
-			recordsHandled: 0,
-		},
+		handler: &handler{},
 		adapter: adapter,
 		metrics: make([]*metricpb.ResourceMetrics, 0),
 	}
@@ -54,9 +53,7 @@ func (w *worker) Metrics(adapter adapter.MetricsAdapter, wg *sync.WaitGroup) {
 
 func (w *worker) Spans(adapter adapter.SpansAdapter, wg *sync.WaitGroup) {
 	h := &spansHandler{
-		handler: &handler{
-			recordsHandled: 0,
-		},
+		handler: &handler{},
 		adapter: adapter,
 		spans:   make([]*tracepb.ResourceSpans, 0),
 	}
@@ -81,28 +78,31 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			wg.Done()
 			return
 		default:
-			ch := make(chan bool, 1)
+			ch := make(chan error, 1)
 			pixieCtx, cancelFn := context.WithCancel(ctx)
 			go func() {
 				log.Debugf("executing Pixie script %s\n", name)
 				resultSet, err := vz.ExecuteScript(pixieCtx, script, rm)
 				if err != nil && err != io.EOF {
-					log.Errorf("error while executing Pixie script: %s", err)
+					ch <- fmt.Errorf("error while executing Pixie script: %s", err)
+					return
 				}
 				log.Debugf("streaming results for %s\n", name)
 				if err := resultSet.Stream(); err != nil {
-					log.Warnf("Pixie streaming error: %s", err)
+					ch <- fmt.Errorf("pixie streaming error: %s", err)
+					return
 				}
-				if records, err := h.send(exporter); err != nil {
-					log.Warnf(err.Error())
-				} else {
-					log.Debugf("done streaming %d results for %s\n", records, name)
-				}
-				ch <- true
+				records := h.send(exporter)
+				log.Debugf("done streaming %d results for %s\n", records, name)
+				ch <- nil
 			}()
 			select {
-			case <-ch:
-				log.Debugf("execution completed successfully for %s!", name)
+			case err := <-ch:
+				if err == nil {
+					log.Debugf("execution completed successfully for %s!", name)
+				} else {
+					log.Warnf("execution failed for %s: %s", name, err)
+				}
 			case <-time.After(maxExecutionTime):
 				cancelFn()
 				log.Warnf("execution out of time for %s!", name)

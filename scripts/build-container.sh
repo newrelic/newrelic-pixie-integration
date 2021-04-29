@@ -2,4 +2,4 @@
 
 echo "[build-container] duilding container...."
 
-docker build -t $1:$2 .
+docker build -t $2:$3 --build-arg GOLANG_VERSION=$1 .

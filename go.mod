@@ -1,6 +1,7 @@
 module github.com/newrelic/newrelic-pixie-integration
 
 require (
+	github.com/Shopify/toxiproxy v2.1.4+incompatible
 	github.com/go-delve/delve v1.6.0
 	github.com/golangci/golangci-lint v1.39.0
 	github.com/newrelic/infrastructure-agent v0.0.0-20210422145429-ffccdd3cde2b

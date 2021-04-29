@@ -10,6 +10,8 @@ import (
 )
 
 const jvmPXL = `
+#px:set max_output_rows_per_table=15000
+
 import px
 
 ns_per_ms = 1000 * 1000

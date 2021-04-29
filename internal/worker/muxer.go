@@ -13,7 +13,7 @@ import (
 
 type customHandler interface {
 	pxapi.TableRecordHandler
-	send(exporter.Exporter) (int64, error)
+	send(exporter.Exporter) int
 }
 
 type ResultMuxer struct {
@@ -25,7 +25,6 @@ func (r *ResultMuxer) AcceptTable(ctx context.Context, metadata types.TableMetad
 }
 
 type handler struct {
-	recordsHandled int64
 }
 
 type metricsHandler struct {
@@ -49,7 +48,6 @@ func (w *handler) HandleDone(ctx context.Context) error {
 }
 
 func (w *metricsHandler) HandleRecord(ctx context.Context, r *types.Record) error {
-	w.recordsHandled += 1
 	metrics, err := w.adapter.Adapt(r)
 	if err != nil {
 		return err
@@ -59,7 +57,6 @@ func (w *metricsHandler) HandleRecord(ctx context.Context, r *types.Record) erro
 }
 
 func (h *spansHandler) HandleRecord(ctx context.Context, r *types.Record) error {
-	h.recordsHandled += 1
 	spans, err := h.adapter.Adapt(r)
 	if err != nil {
 		return err
@@ -68,32 +65,16 @@ func (h *spansHandler) HandleRecord(ctx context.Context, r *types.Record) error 
 	return nil
 }
 
-func (h *spansHandler) send(exporter exporter.Exporter) (int64, error) {
-	if len(h.spans) == 0 {
-		return 0, nil
-	}
+func (h *spansHandler) send(exporter exporter.Exporter) int {
 	defer func() {
 		h.spans = h.spans[:0]
 	}()
-	handled := h.recordsHandled
-	h.recordsHandled = 0
-	if err := exporter.SendSpans(h.spans); err != nil {
-		return 0, err
-	}
-	return handled, nil
+	return exporter.SendSpans(h.spans)
 }
 
-func (h *metricsHandler) send(exporter exporter.Exporter) (int64, error) {
-	if len(h.metrics) == 0 {
-		return 0, nil
-	}
+func (h *metricsHandler) send(exporter exporter.Exporter) int {
 	defer func() {
 		h.metrics = h.metrics[:0]
 	}()
-	handled := h.recordsHandled
-	h.recordsHandled = 0
-	if err := exporter.SendMetrics(h.metrics); err != nil {
-		return 0, err
-	}
-	return handled, nil
+	return exporter.SendMetrics(h.metrics)
 }

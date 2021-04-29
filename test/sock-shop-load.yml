@@ -6,7 +6,7 @@ metadata:
   labels:
     app: load-test
 spec:
-  replicas: 1
+  replicas: 10
   selector:
     matchLabels:
       app: load-test

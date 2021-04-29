@@ -12,8 +12,8 @@ import (
 )
 
 type Exporter interface {
-	SendMetrics(metrics []*metricpb.ResourceMetrics) error
-	SendSpans(spans []*tracepb.ResourceSpans) error
+	SendMetrics(metrics []*metricpb.ResourceMetrics) int
+	SendSpans(spans []*tracepb.ResourceSpans) int
 }
 
 func New(ctx context.Context, cfg config.Exporter) (Exporter, error) {

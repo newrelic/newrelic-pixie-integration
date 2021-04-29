@@ -9,6 +9,8 @@ import (
 )
 
 var mysqlPXL = `
+#px:set max_output_rows_per_table=15000
+
 import px
 df = px.DataFrame('mysql_events', start_time='-10s')
 df.pod = df.ctx['pod']
