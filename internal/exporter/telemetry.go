@@ -45,7 +45,7 @@ func (e *openTelemetry) SendMetrics(metrics []*metricpb.ResourceMetrics) int {
 				ResourceMetrics: batch,
 			})
 			if err != nil {
-				log.Errorf("missing %d metrics. error while sending: %s", lenMetrics, err)
+				log.Errorf("missing %d metrics. error while sending: %s", len(batch), err)
 			} else {
 				processed += len(batch)
 			}
@@ -77,7 +77,7 @@ func (e *openTelemetry) SendSpans(spans []*tracepb.ResourceSpans) int {
 				ResourceSpans: batch,
 			})
 			if err != nil {
-				log.Errorf("missing %d spans. error while sending: %s", lenSpans, err)
+				log.Errorf("missing %d spans. error while sending: %s", len(batch), err)
 			} else {
 				processed += len(batch)
 			}
