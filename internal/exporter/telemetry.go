@@ -4,6 +4,9 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"sync"
+	"time"
+
 	"github.com/newrelic/infrastructure-agent/pkg/log"
 	colmetricpb "go.opentelemetry.io/proto/otlp/collector/metrics/v1"
 	coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
@@ -12,8 +15,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
-	"sync"
-	"time"
 )
 
 const chunkSize = 1000
@@ -26,10 +27,10 @@ type openTelemetry struct {
 
 func (e *openTelemetry) SendMetrics(metrics []*metricpb.ResourceMetrics) int {
 	lenMetrics := len(metrics)
-	if lenMetrics==0{
+	if lenMetrics == 0 {
 		return 0
 	}
-	startTime:=time.Now()
+	startTime := time.Now()
 	processed := 0
 	var wg sync.WaitGroup
 	for i := 0; i < lenMetrics; i += chunkSize {
@@ -52,16 +53,16 @@ func (e *openTelemetry) SendMetrics(metrics []*metricpb.ResourceMetrics) int {
 		}(metricsBatch)
 	}
 	wg.Wait()
-	log.Debugf("It took %v to send %d metrics",time.Now().Sub(startTime).Seconds(),processed)
+	log.Debugf("It took %v to send %d metrics", time.Now().Sub(startTime).Seconds(), processed)
 	return processed
 }
 
 func (e *openTelemetry) SendSpans(spans []*tracepb.ResourceSpans) int {
 	lenSpans := len(spans)
-	if lenSpans==0{
+	if lenSpans == 0 {
 		return 0
 	}
-	startTime:=time.Now()
+	startTime := time.Now()
 	processed := 0
 	var wg sync.WaitGroup
 	for i := 0; i < lenSpans; i += chunkSize {
@@ -84,7 +85,7 @@ func (e *openTelemetry) SendSpans(spans []*tracepb.ResourceSpans) int {
 		}(spansBatch)
 	}
 	wg.Wait()
-	log.Debugf("It took %v to send %d spans",time.Now().Sub(startTime).Seconds(),processed)
+	log.Debugf("It took %v to send %d spans", time.Now().Sub(startTime).Seconds(), processed)
 	return processed
 }
 

@@ -2,13 +2,13 @@ package main
 
 import (
 	"fmt"
+	"net"
+
 	"github.com/Shopify/toxiproxy"
 	toxiclient "github.com/Shopify/toxiproxy/client"
-	"net"
 )
 
 func main() {
-
 	toxiServer := toxiproxy.NewServer()
 	ch := make(chan bool, 1)
 	go func() {
@@ -19,7 +19,7 @@ func main() {
 	fmt.Println(<-ch)
 }
 
-func setUpProxies() error{
+func setUpProxies() error {
 	proxyClient := toxiclient.NewClient(net.JoinHostPort("localhost", "8474"))
 
 	_, err := proxyClient.CreateProxy(
@@ -27,7 +27,7 @@ func setUpProxies() error{
 		"0.0.0.0:6000",
 		"work.withpixie.ai:443",
 	)
-	if err!=nil{
+	if err != nil {
 		return err
 	}
 	_, err = proxyClient.CreateProxy(

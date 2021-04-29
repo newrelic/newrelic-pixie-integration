@@ -5,4 +5,4 @@ githooks
 .git
 Makefile
 README.md
-vendorz
+vendor

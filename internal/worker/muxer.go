@@ -24,8 +24,7 @@ func (r *ResultMuxer) AcceptTable(ctx context.Context, metadata types.TableMetad
 	return r.RecordHandler, nil
 }
 
-type handler struct {
-}
+type handler struct{}
 
 type metricsHandler struct {
 	*handler
