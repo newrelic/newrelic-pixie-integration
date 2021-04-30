@@ -18,7 +18,7 @@ const (
 	envPixieClusterID = "PIXIE_CLUSTER_ID"
 	envPixieAPIKey    = "PIXIE_API_KEY"
 	envClusterName    = "CLUSTER_NAME"
-	endpointEU        = "eu.otlp.nr-data.net:4317"
+	endpointEU        = "otlp.eu01.nr-data.net:4317"
 	endpointUSA       = "otlp.nr-data.net:4317"
 	endpointStg       = "staging.otlp.nr-data.net:4317"
 	boolTrue          = "true"
