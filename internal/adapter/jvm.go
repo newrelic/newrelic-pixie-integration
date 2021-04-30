@@ -2,10 +2,11 @@ package adapter
 
 import (
 	"fmt"
+	"px.dev/pxapi/proto/vizierpb"
 
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	metricpb "go.opentelemetry.io/proto/otlp/metrics/v1"
-	vizierapipb "px.dev/pxapi/pxpb/vizierapipb"
+
 	"px.dev/pxapi/types"
 )
 
@@ -125,9 +126,9 @@ func (a *jvm) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 func getValueFromJVMMetric(r *types.Record, metricName string) (float64, error) {
 	valueDatum := r.GetDatum(metricName)
 	var value float64
-	if valueDatum.Type() == vizierapipb.INT64 {
+	if valueDatum.Type() == vizierpb.INT64 {
 		value = float64(valueDatum.(*types.Int64Value).Value())
-	} else if valueDatum.Type() == vizierapipb.FLOAT64 {
+	} else if valueDatum.Type() == vizierpb.FLOAT64 {
 		value = float64(valueDatum.(*types.Float64Value).Value())
 	} else {
 		return 0, fmt.Errorf("unsupported data type for metric %s", metricName)

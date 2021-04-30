@@ -14,7 +14,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210405174219-a39eb2f71cb9 // indirect
 	google.golang.org/grpc v1.37.0
 	mvdan.cc/gofumpt v0.1.1
-	px.dev/pxapi v0.0.0-20210419204323-b1762c24ad7e
+	px.dev/pxapi v0.0.0-20210429075727-90459acf9e37
 )
 
 go 1.16
