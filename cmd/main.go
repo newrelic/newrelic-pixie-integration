@@ -3,13 +3,13 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/newrelic/infrastructure-agent/pkg/log"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
 	"time"
 
+	"github.com/newrelic/infrastructure-agent/pkg/log"
 
 	"github.com/newrelic/newrelic-pixie-integration/internal/adapter"
 	"github.com/newrelic/newrelic-pixie-integration/internal/config"
@@ -69,7 +69,7 @@ func setExporterConnection(ctx context.Context, cfg config.Exporter, tries int, 
 	for tries > 0 {
 		exp, err = exporter.New(ctx, cfg)
 		if err == nil {
-			log.Infof("sending data to %s",cfg.Endpoint())
+			log.Infof("sending data to %s", cfg.Endpoint())
 			return
 		}
 		tries -= 1
@@ -82,11 +82,11 @@ func setExporterConnection(ctx context.Context, cfg config.Exporter, tries int, 
 func setupPixie(ctx context.Context, cfg config.Pixie, tries int, sleepTime time.Duration) (vz *pxapi.VizierClient, err error) {
 	var client *pxapi.Client
 	for tries > 0 {
-		client, err = pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()),pxapi.WithCloudAddr(cfg.Host()))
+		client, err = pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()), pxapi.WithCloudAddr(cfg.Host()))
 		if err == nil {
 			vz, err = client.NewVizierClient(ctx, cfg.ClusterID())
 			if err == nil {
-				log.Infof("fetching data from cluster %s on %s",cfg.ClusterID(),cfg.Host())
+				log.Infof("fetching data from cluster %s on %s", cfg.ClusterID(), cfg.Host())
 				return
 			}
 			err = fmt.Errorf("error creating Pixie Vizier client: %w", err)

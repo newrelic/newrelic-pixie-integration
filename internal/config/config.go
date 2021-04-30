@@ -16,7 +16,7 @@ const (
 	envNROTLPHost     = "NR_OTLP_HOST"
 	envNRLicenseKEy   = "NR_LICENSE_KEY"
 	envPixieClusterID = "PIXIE_CLUSTER_ID"
-	envPixieHost      = "PIXIE_HOST"
+	envPixieEndpoint  = "PIXIE_ENDPOINT"
 	envPixieAPIKey    = "PIXIE_API_KEY"
 	envClusterName    = "CLUSTER_NAME"
 	defPixieHostname  = "work.withpixie.ai:443"
@@ -56,7 +56,7 @@ func setUpConfig() error {
 	pixieClusterID := os.Getenv(envPixieClusterID)
 	pixieAPIKey := os.Getenv(envPixieAPIKey)
 	clusterName := os.Getenv(envClusterName)
-	pixieHost := os.Getenv(envPixieHost)
+	pixieHost := os.Getenv(envPixieEndpoint)
 	if pixieHost == "" {
 		pixieHost = defPixieHostname
 	}
