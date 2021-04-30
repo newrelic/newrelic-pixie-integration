@@ -16,8 +16,10 @@ const (
 	envNROTLPHost     = "NR_OTLP_HOST"
 	envNRLicenseKEy   = "NR_LICENSE_KEY"
 	envPixieClusterID = "PIXIE_CLUSTER_ID"
+	envPixieHost      = "PIXIE_HOST"
 	envPixieAPIKey    = "PIXIE_API_KEY"
 	envClusterName    = "CLUSTER_NAME"
+	defPixieHostname  = "work.withpixie.ai:443"
 	endpointEU        = "otlp.eu01.nr-data.net:4317"
 	endpointUSA       = "otlp.nr-data.net:4317"
 	endpointStg       = "staging.otlp.nr-data.net:4317"
@@ -45,6 +47,7 @@ func GetConfig() (Config, error) {
 }
 
 func setUpConfig() error {
+	log.SetLevel(logrus.InfoLevel)
 	if strings.EqualFold(os.Getenv(envVerbose), boolTrue) {
 		log.SetLevel(logrus.DebugLevel)
 	}
@@ -53,6 +56,10 @@ func setUpConfig() error {
 	pixieClusterID := os.Getenv(envPixieClusterID)
 	pixieAPIKey := os.Getenv(envPixieAPIKey)
 	clusterName := os.Getenv(envClusterName)
+	pixieHost := os.Getenv(envPixieHost)
+	if pixieHost == "" {
+		pixieHost = defPixieHostname
+	}
 	var err error
 	nrHostname, err = getEndpoint(nrHostname, nrLicenseKey)
 	if err != nil {
@@ -74,6 +81,7 @@ func setUpConfig() error {
 		pixie: &pixie{
 			apiKey:    pixieAPIKey,
 			clusterID: pixieClusterID,
+			host:      pixieHost,
 		},
 	}
 	return instance.validate()
@@ -179,12 +187,14 @@ func (e *exporter) Endpoint() string {
 type Pixie interface {
 	APIKey() string
 	ClusterID() string
+	Host() string
 	validate() error
 }
 
 type pixie struct {
 	apiKey    string
 	clusterID string
+	host      string
 }
 
 func (p *pixie) validate() error {
@@ -203,6 +213,10 @@ func (p *pixie) APIKey() string {
 
 func (p *pixie) ClusterID() string {
 	return p.clusterID
+}
+
+func (p *pixie) Host() string {
+	return p.host
 }
 
 type Worker interface {
