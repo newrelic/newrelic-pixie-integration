@@ -2,6 +2,7 @@ package adapter
 
 import (
 	"fmt"
+
 	"px.dev/pxapi/proto/vizierpb"
 
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
