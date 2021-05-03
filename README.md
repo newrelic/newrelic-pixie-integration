@@ -27,11 +27,15 @@ Define the following environment variables in the `env.list` file:
 
 ```
 CLUSTER_NAME=
-
 PIXIE_API_KEY=
 PIXIE_CLUSTER_ID=
-
 NR_LICENSE_KEY=
+```
+
+The following environment variables are optional. 
+
+```
+PIXIE_ENDPOINT=work.withpixie.ai:443
 NR_OTLP_HOST=staging.otlp.nr-data.net:4317
 VERBOSE=true
 ```
