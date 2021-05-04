@@ -2,7 +2,7 @@
 
 # New Relic Pixie Integration
 
-The Pixie integration configures Pixie to send a set of curated observability data to New Relic using the OpenTelemetry line protocol. The integration leverages PXL scripts to stream APM metrics and spans from Pixie to New Relic.
+The Pixie integration pulls a set of curated observability data from Pixie to send it to New Relic using the OpenTelemetry line protocol. The integration leverages PXL scripts retrieve the data from Pixie.
 
 ## Getting Started
 
@@ -21,7 +21,7 @@ Docker is required to build the Pixie integration container image.
 
 ## Usage
 
-```docker run --env-file ./env.list -it newrelic/pixie-integration:1.0.0```
+```docker run --env-file ./env.list -it newrelic/newrelic-pixie-integration:0.1.0```
 
 Define the following environment variables in the `env.list` file:
 
@@ -36,7 +36,7 @@ The following environment variables are optional.
 
 ```
 PIXIE_ENDPOINT=work.withpixie.ai:443
-NR_OTLP_HOST=staging.otlp.nr-data.net:4317
+NR_OTLP_HOST=otlp.nr-data.net:4317
 VERBOSE=true
 ```
 
@@ -46,12 +46,12 @@ After executing the command above Pixie data should be flowing into your New Rel
 
 **Metrics**
 ```
-SELECT * FROM Metric WHERE instrumentation.name='pixie'
+SELECT * FROM Metric WHERE instrumentation.provider='pixie'
 ```
 
 **Spans**
 ```
-SELECT * FROM Span WHERE instrumentation.name='pixie'
+SELECT * FROM Span WHERE instrumentation.provider='pixie'
 ```
 
 ## Support
