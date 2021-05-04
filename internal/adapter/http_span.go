@@ -23,9 +23,10 @@ df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']
-df.parent_service = px.service_id_to_service_name(px.ip_to_service_id(df.remote_addr))
-df.parent_pod = px.pod_id_to_pod_name(px.ip_to_pod_id(df.remote_addr))
-
+df = df.head(15000)
+df.parent_pod_id = px.ip_to_pod_id(df.remote_addr)
+df.parent_service = px.pod_id_to_service_name(df.parent_pod_id)
+df.parent_pod = px.pod_id_to_pod_name(df.parent_pod_id)
 df.host = px.pluck(df.req_headers, 'Host')
 df.user_agent = px.pluck(df.req_headers, 'User-Agent')
 df.trace_id = px.pluck(df.req_headers, 'X-B3-TraceId')
