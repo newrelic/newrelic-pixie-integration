@@ -22,12 +22,6 @@ const (
 
 var regExpIsArray = regexp.MustCompilePOSIX(`\[((\"[a-zA-Z0-9\-\/._]+\")+,)*(\"[a-zA-Z0-9\-\/._]+\")\]`)
 
-type rootAttributes struct {
-	namespace string
-	service   string
-	pod       string
-}
-
 func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, pod string) {
 	ns = r.GetDatum(colNamespace).String()
 	nsPrefix := fmt.Sprintf("%s/", ns)
@@ -42,16 +36,6 @@ func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, 
 	}
 	pod = strings.TrimPrefix(r.GetDatum(colPod).String(), nsPrefix)
 	return
-}
-
-func cleanNamespacePrefix(r *types.Record, colNames ...string) []string {
-	nsPrefix := fmt.Sprintf("%s/", r.GetDatum(colNamespace))
-	out := make([]string, len(colNames))
-	for index := range colNames {
-		val := r.GetDatum(colNames[index]).String()
-		out[index] = strings.TrimPrefix(val, nsPrefix)
-	}
-	return out
 }
 
 func creteResourceFunc(r *types.Record, namespace, pod, cluster string) func([]string) []resourcepb.Resource {

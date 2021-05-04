@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"fmt"
 	"regexp"
 	"strings"
 	"time"
@@ -23,9 +24,10 @@ df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']
-df.parent_service = px.service_id_to_service_name(px.ip_to_service_id(df.remote_addr))
-df.parent_pod = px.pod_id_to_pod_name(px.ip_to_pod_id(df.remote_addr))
-
+df = df.head(15000)
+df.parent_pod_id = px.ip_to_pod_id(df.remote_addr)
+df.parent_service = px.pod_id_to_service_name(df.parent_pod_id)
+df.parent_pod = px.pod_id_to_pod_name(df.parent_pod_id)
 df.host = px.pluck(df.req_headers, 'Host')
 df.user_agent = px.pluck(df.req_headers, 'User-Agent')
 df.trace_id = px.pluck(df.req_headers, 'X-B3-TraceId')
@@ -61,8 +63,17 @@ func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	if err != nil {
 		return nil, err
 	}
-	cleanedValues := cleanNamespacePrefix(r, "parent_service", "parent_pod")
+	parentServices := make([]string, 0)
+	nsPrefix := fmt.Sprintf("%s/", r.GetDatum(colNamespace))
+	preParentService := r.GetDatum("parent_service").String()
 
+	if regExpIsArray.MatchString(preParentService) {
+		parentServicesList := strings.Split(preParentService[1:len(preParentService)-1], ",")
+		for _, name := range parentServicesList {
+			parentServices = append(parentServices, strings.TrimPrefix(name[1:len(name)-1], nsPrefix))
+		}
+	}
+	parentPod := strings.TrimPrefix(r.GetDatum("parent_pod").String(), nsPrefix)
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	path := r.GetDatum("req_path").String()
 	duration := time.Duration(r.GetDatum("latency").(*types.Int64Value).Value())
@@ -71,58 +82,64 @@ func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	statusCode := r.GetDatum("resp_status").(*types.Int64Value).Value()
 	userAgent := r.GetDatum("user_agent").String()
 	resources := createResources(r, a.clusterName)
-	return createArrayOfSpans(resources, []*tracepb.InstrumentationLibrarySpans{
-		{
-			InstrumentationLibrary: instrumentationLibrary,
-			Spans: []*tracepb.Span{
-				{
-					TraceId:           traceID[:],
-					SpanId:            spanID[:],
-					TraceState:        "",
-					ParentSpanId:      parentSpanID[:],
-					Name:              urlPolish(path),
-					Kind:              tracepb.Span_SPAN_KIND_SERVER,
-					StartTimeUnixNano: uint64(timestamp.UnixNano()),
-					EndTimeUnixNano:   uint64(timestamp.UnixNano() + duration.Nanoseconds()),
-					Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_UNSET},
-					Attributes: []*commonpb.KeyValue{
-						{
-							Key:   "parent.service.name",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: cleanedValues[0]}},
-						},
-						{
-							Key:   "parent.k8s.pod.name",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: cleanedValues[1]}},
-						},
-						{
-							Key:   "http.method",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: method}},
-						},
-						{
-							Key:   "http.url",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: host + path}},
-						},
-						{
-							Key:   "http.target",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: path}},
-						},
-						{
-							Key:   "http.host",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: host}},
-						},
-						{
-							Key:   "http.status_code",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_IntValue{IntValue: statusCode}},
-						},
-						{
-							Key:   "http.user_agent",
-							Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: userAgent}},
+	output := make([]*tracepb.ResourceSpans, 0)
+
+	for i := range parentServices {
+		spans := createArrayOfSpans(resources, []*tracepb.InstrumentationLibrarySpans{
+			{
+				InstrumentationLibrary: instrumentationLibrary,
+				Spans: []*tracepb.Span{
+					{
+						TraceId:           traceID[:],
+						SpanId:            spanID[:],
+						TraceState:        "",
+						ParentSpanId:      parentSpanID[:],
+						Name:              urlPolish(path),
+						Kind:              tracepb.Span_SPAN_KIND_SERVER,
+						StartTimeUnixNano: uint64(timestamp.UnixNano()),
+						EndTimeUnixNano:   uint64(timestamp.UnixNano() + duration.Nanoseconds()),
+						Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_UNSET},
+						Attributes: []*commonpb.KeyValue{
+							{
+								Key:   "parent.service.name",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: parentServices[i]}},
+							},
+							{
+								Key:   "parent.k8s.pod.name",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: parentPod}},
+							},
+							{
+								Key:   "http.method",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: method}},
+							},
+							{
+								Key:   "http.url",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: host + path}},
+							},
+							{
+								Key:   "http.target",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: path}},
+							},
+							{
+								Key:   "http.host",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: host}},
+							},
+							{
+								Key:   "http.status_code",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_IntValue{IntValue: statusCode}},
+							},
+							{
+								Key:   "http.user_agent",
+								Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: userAgent}},
+							},
 						},
 					},
 				},
 			},
-		},
-	}), nil
+		})
+		output = append(output, spans...)
+	}
+	return output, nil
 }
 
 var re = regexp.MustCompile(`^([[:xdigit:]]|-|:)+$`)
