@@ -38,8 +38,6 @@ func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, 
 	return
 }
 
-
-
 func creteResourceFunc(r *types.Record, namespace, pod, cluster string) func([]string) []resourcepb.Resource {
 	resource := resourcepb.Resource{
 		Attributes: []*commonpb.KeyValue{
