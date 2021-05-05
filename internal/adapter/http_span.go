@@ -72,6 +72,8 @@ func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 		for _, name := range parentServicesList {
 			parentServices = append(parentServices, strings.TrimPrefix(name[1:len(name)-1], nsPrefix))
 		}
+	} else {
+		parentServices = append(parentServices, strings.TrimPrefix(preParentService, nsPrefix))
 	}
 	parentPod := strings.TrimPrefix(r.GetDatum("parent_pod").String(), nsPrefix)
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
