@@ -53,7 +53,7 @@ func (e *openTelemetry) SendMetrics(metrics []*metricpb.ResourceMetrics) int {
 		}(metricsBatch)
 	}
 	wg.Wait()
-	log.Debugf("It took %v to send %d metrics", time.Now().Sub(startTime).Seconds(), processed)
+	log.Debugf("It took %v to send %d metrics", time.Since(startTime).Seconds(), processed)
 	return processed
 }
 
@@ -85,7 +85,7 @@ func (e *openTelemetry) SendSpans(spans []*tracepb.ResourceSpans) int {
 		}(spansBatch)
 	}
 	wg.Wait()
-	log.Debugf("It took %v to send %d spans", time.Now().Sub(startTime).Seconds(), processed)
+	log.Debugf("It took %v to send %d spans", time.Since(startTime).Seconds(), processed)
 	return processed
 }
 
