@@ -17,7 +17,7 @@ type Exporter interface {
 }
 
 func New(ctx context.Context, cfg config.Exporter) (Exporter, error) {
-	conn, outgoingCtx, err := createConnection(ctx, cfg.Endpoint(), cfg.LicenseKey())
+	conn, outgoingCtx, err := createConnection(ctx, cfg.Endpoint(), cfg.LicenseKey(), cfg.UserAgent())
 	if err != nil {
 		return nil, err
 	}

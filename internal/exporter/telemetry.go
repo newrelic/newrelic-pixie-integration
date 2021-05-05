@@ -89,12 +89,14 @@ func (e *openTelemetry) SendSpans(spans []*tracepb.ResourceSpans) int {
 	return processed
 }
 
-func createConnection(ctx context.Context, endpoint string, apiKey string) (*grpc.ClientConn, context.Context, error) {
+func createConnection(ctx context.Context, endpoint string, apiKey string, userAgent string) (*grpc.ClientConn, context.Context, error) {
 	outgoingCtx := metadata.NewOutgoingContext(ctx, metadata.Pairs("api-key", apiKey))
-	var opts []grpc.DialOption
-	tlsDialOption := grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{}))
-	opts = append(opts, tlsDialOption)
-	conn, err := grpc.DialContext(outgoingCtx, endpoint, opts...)
+	conn, err := grpc.DialContext(
+		outgoingCtx,
+		endpoint,
+		grpc.WithTransportCredentials(credentials.NewTLS(&tls.Config{})),
+		grpc.WithUserAgent(userAgent),
+	)
 	if err != nil {
 		return nil, context.Background(), fmt.Errorf("error creating grpc connection: %w", err)
 	}
