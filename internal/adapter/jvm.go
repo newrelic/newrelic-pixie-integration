@@ -15,13 +15,7 @@ const jvmPXL = `
 #px:set max_output_rows_per_table=15000
 
 import px
-
-ns_per_ms = 1000 * 1000
-ns_per_s = 1000 * ns_per_ms
-window_ns = px.DurationNanos(10 * ns_per_s)
-
 df = px.DataFrame(table='jvm_stats', start_time='-10s')
-df.timestamp = px.bin(df.time_, window_ns)
 
 df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
@@ -32,8 +26,8 @@ df.used_heap_size = px.Bytes(df.used_heap_size)
 df.total_heap_size = px.Bytes(df.total_heap_size)
 df.max_heap_size = px.Bytes(df.max_heap_size)
 
-# Aggregate over each process, k8s_object, and window.
-by_upid = df.groupby(['upid','container', 'pod', 'service', 'namespace', 'timestamp']).agg(
+# Aggregate over each process, k8s_object.
+by_upid = df.groupby(['upid','container', 'pod', 'service', 'namespace']).agg(
     young_gc_time_max=('young_gc_time', px.max),
     young_gc_time_min=('young_gc_time', px.min),
     full_gc_time_max=('full_gc_time', px.max),
@@ -41,30 +35,32 @@ by_upid = df.groupby(['upid','container', 'pod', 'service', 'namespace', 'timest
     used_heap_size=('used_heap_size', px.mean),
     total_heap_size=('total_heap_size', px.mean),
     max_heap_size=('max_heap_size', px.mean),
+    timestamp=('time_', px.max),
 )
 
 # Convert the counter metrics into accumulated values over the window.
 by_upid.young_gc_time = by_upid.young_gc_time_max - by_upid.young_gc_time_min
 by_upid.full_gc_time = by_upid.full_gc_time_max - by_upid.full_gc_time_min
 
-# Aggregate over each k8s_object, and window.
-by_k8s = by_upid.groupby(['container', 'pod', 'service', 'namespace', 'timestamp']).agg(
+# Aggregate over each k8s_object.
+by_k8s = by_upid.groupby(['container', 'pod', 'service', 'namespace']).agg(
     young_gc_time=('young_gc_time', px.sum),
     full_gc_time=('full_gc_time', px.sum),
     used_heap_size=('used_heap_size', px.sum),
     max_heap_size=('max_heap_size', px.sum),
     total_heap_size=('total_heap_size', px.sum),
+    timestamp=('timestamp', px.max),
 )
-by_k8s.young_gc_time = px.DurationNanos(by_k8s.young_gc_time)
-by_k8s.full_gc_time = px.DurationNanos(by_k8s.full_gc_time)
+by_k8s.young_gc_time = px.DurationNanos(by_k8s.young_gc_time) / 1000000.0
+by_k8s.full_gc_time = px.DurationNanos(by_k8s.full_gc_time) / 1000000.0
 by_k8s['time_'] = by_k8s['timestamp']
 
 px.display(by_k8s, 'jvm')
 `
 
 var metricMapping = map[string]metricDef{
-	"young_gc_time":   {"runtime.jvm.gc.collection", "", "ns", map[string]interface{}{"gc": "young"}},
-	"full_gc_time":    {"runtime.jvm.gc.collection", "", "ns", map[string]interface{}{"gc": "full"}},
+	"young_gc_time":   {"runtime.jvm.gc.collection", "", "ms", map[string]interface{}{"gc": "young"}},
+	"full_gc_time":    {"runtime.jvm.gc.collection", "", "ms", map[string]interface{}{"gc": "full"}},
 	"used_heap_size":  {"runtime.jvm.memory.area", "", "bytes", map[string]interface{}{"type": "used", "area": "heap"}},
 	"total_heap_size": {"runtime.jvm.memory.area", "", "bytes", map[string]interface{}{"type": "total", "area": "heap"}},
 	"max_heap_size":   {"runtime.jvm.memory.area", "", "bytes", map[string]interface{}{"type": "max", "area": "heap"}},
