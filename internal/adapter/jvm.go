@@ -15,7 +15,7 @@ const jvmPXL = `
 #px:set max_output_rows_per_table=15000
 
 import px
-df = px.DataFrame(table='jvm_stats', start_time='-10s')
+df = px.DataFrame('jvm_stats', start_time='-10s')
 
 df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
@@ -116,6 +116,7 @@ func (a *jvm) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 				},
 			},
 		}
+		index++
 	}
 	return createArrayOfMetrics(resources, instrumentationLibraries), nil
 }
@@ -126,7 +127,7 @@ func getValueFromJVMMetric(r *types.Record, metricName string) (float64, error) 
 	if valueDatum.Type() == vizierpb.INT64 {
 		value = float64(valueDatum.(*types.Int64Value).Value())
 	} else if valueDatum.Type() == vizierpb.FLOAT64 {
-		value = float64(valueDatum.(*types.Float64Value).Value())
+		value = valueDatum.(*types.Float64Value).Value()
 	} else {
 		return 0, fmt.Errorf("unsupported data type for metric %s", metricName)
 	}
