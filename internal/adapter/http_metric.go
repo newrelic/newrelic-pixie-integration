@@ -13,14 +13,7 @@ const httpMetricsPXL = `
 #px:set max_output_rows_per_table=15000
 
 import px
-
-ns_per_ms = 1000 * 1000
-ns_per_s = 1000 * ns_per_ms
-window_ns = px.DurationNanos(10 * ns_per_s)
-
 df = px.DataFrame(table='http_events', start_time='-10s')
-
-df.timestamp = px.bin(df.time_, window_ns)
 
 df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
@@ -29,11 +22,12 @@ df.namespace = df.ctx['namespace']
 
 df.status_code = df.resp_status
 
-df = df.groupby(['timestamp', 'status_code', 'pod', 'container','service', 'namespace']).agg(
+df = df.groupby(['status_code', 'pod', 'container','service', 'namespace']).agg(
     latency_min=('latency', px.min),
     latency_max=('latency', px.max),
     latency_sum=('latency', px.sum),
-    latency_count=('latency', px.count)
+    latency_count=('latency', px.count),
+    timestamp=('time_', px.max),
 )
 
 px.display(df, 'http')

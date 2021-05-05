@@ -18,7 +18,7 @@ import (
 
 const (
 	defaultSleepTime = 10 * time.Second
-	maxExecutionTime = 10 * time.Second
+	maxExecutionTime = 9 * time.Second
 )
 
 type Worker interface {
@@ -78,6 +78,7 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			wg.Done()
 			return
 		default:
+			start := time.Now()
 			ch := make(chan error, 1)
 			pixieCtx, cancelFn := context.WithCancel(ctx)
 			go func() {
@@ -110,7 +111,12 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			if resultSet != nil {
 				resultSet.Close()
 			}
-			time.Sleep(defaultSleepTime)
+			sleepTime := start.Add(defaultSleepTime).Sub(time.Now())
+			if (sleepTime > 0) {
+				time.Sleep(sleepTime)
+			} else {
+				log.Warnf("skipping the sleep for %s!", name)
+			}
 		}
 	}
 }

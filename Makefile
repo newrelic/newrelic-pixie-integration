@@ -1,7 +1,7 @@
 include .env
 
 BIN_DIR = ./bin
-DOCKER_IMAGE_TAG ?= 0.1.0
+DOCKER_IMAGE_TAG ?= latest
 
 # required for enabling Go modules inside $GOPATH
 export GO111MODULE=on

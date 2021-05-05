@@ -21,7 +21,7 @@ Docker is required to build the Pixie integration container image.
 
 ## Usage
 
-```docker run --env-file ./env.list -it newrelic/newrelic-pixie-integration:0.1.0```
+```docker run --env-file ./env.list -it newrelic/newrelic-pixie-integration:latest```
 
 Define the following environment variables in the `env.list` file:
 
