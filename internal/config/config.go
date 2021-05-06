@@ -77,6 +77,7 @@ func setUpConfig() error {
 		exporter: &exporter{
 			licenseKey: nrLicenseKey,
 			endpoint:   nrHostname,
+			userAgent:  "pixie/" + integrationVersion,
 		},
 		pixie: &pixie{
 			apiKey:    pixieAPIKey,
@@ -161,12 +162,14 @@ func (s *settings) BuildDate() string {
 type Exporter interface {
 	LicenseKey() string
 	Endpoint() string
+	UserAgent() string
 	validate() error
 }
 
 type exporter struct {
 	licenseKey string
 	endpoint   string
+	userAgent  string
 }
 
 func (e *exporter) validate() error {
@@ -182,6 +185,10 @@ func (e *exporter) LicenseKey() string {
 
 func (e *exporter) Endpoint() string {
 	return e.endpoint
+}
+
+func (e *exporter) UserAgent() string {
+	return e.userAgent
 }
 
 type Pixie interface {
