@@ -22,7 +22,6 @@ const (
 	defPixieHostname  = "work.withpixie.ai:443"
 	endpointEU        = "otlp.eu01.nr-data.net:4317"
 	endpointUSA       = "otlp.nr-data.net:4317"
-	endpointStg       = "staging.otlp.nr-data.net:4317"
 	boolTrue          = "true"
 )
 
@@ -30,10 +29,6 @@ var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""
 	buildDate          = ""
-	endpoints          = map[string]string{
-		"eu": endpointEU,
-		"":   endpointUSA,
-	}
 	once     sync.Once
 	instance Config
 )
@@ -248,13 +243,13 @@ func (a *worker) ClusterName() string {
 
 func getEndpoint(hostname, licenseKey string) (string, error) {
 	if hostname != "" {
-		log.Debugf("spans & metrics will be %s", hostname)
+		log.Debugf("spans & metrics will be sent to endpoint %s", hostname)
 		return hostname, nil
 	}
+	endpoint := endpointUSA
 	nrRegion := license.GetRegion(licenseKey)
-	endpoint, ok := endpoints[strings.ToLower(nrRegion)]
-	if !ok {
-		return "", fmt.Errorf("the provided license key doesn't belong to a known New Relic region")
+	if strings.ToLower(nrRegion) == "eu" {
+		endpoint = endpointEU
 	}
 	log.Debugf("spans & metrics will be sent to endpoint %s", endpoint)
 	return endpoint, nil
