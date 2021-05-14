@@ -18,7 +18,11 @@ df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']	
 df.container = df.ctx['container_name']
 
-df = df[['time_', 'container', 'service', 'pod', 'namespace', 'req', 'latency']]
+df.normed_query_struct = px.normalize_pgsql(df.req, df.req_cmd)
+df.query = px.pluck(df.normed_query_struct, 'query')
+df = df[df.query != ""]
+
+df = df[['time_', 'container', 'service', 'pod', 'namespace', 'query', 'latency']]
 px.display(df, 'pgsql')
 `
 
@@ -53,7 +57,7 @@ func (a *pogsql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 					StartTimeUnixNano: uint64(timestamp.UnixNano()),
 					EndTimeUnixNano:   uint64(timestamp.UnixNano() + duration.Nanoseconds()),
 					Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_UNSET},
-					Name:              r.GetDatum("req").String(),
+					Name:              r.GetDatum("query").String(),
 					Attributes: []*commonpb.KeyValue{
 						{
 							Key:   "db.system",

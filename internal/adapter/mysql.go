@@ -18,7 +18,11 @@ df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']	
 df.container = df.ctx['container_name']
 
-df = df[['time_', 'container', 'service', 'pod', 'namespace', 'req_body', 'latency']]
+df.normed_query_struct = px.normalize_mysql(df.req_body, df.req_cmd)
+df.query = px.pluck(df.normed_query_struct, 'query')
+df = df[df.query != ""]
+
+df = df[['time_', 'container', 'service', 'pod', 'namespace', 'query', 'latency']]
 px.display(df, 'mysql')
 `
 
@@ -53,7 +57,7 @@ func (a *mysql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 					StartTimeUnixNano: uint64(timestamp.UnixNano()),
 					EndTimeUnixNano:   uint64(timestamp.UnixNano() + duration.Nanoseconds()),
 					Status:            &tracepb.Status{Code: tracepb.Status_STATUS_CODE_UNSET},
-					Name:              r.GetDatum("req_body").String(),
+					Name:              r.GetDatum("query").String(),
 					Attributes: []*commonpb.KeyValue{
 						{
 							Key:   "db.system",
