@@ -2,11 +2,11 @@
 
 # New Relic Pixie Integration
 
-The Pixie integration pulls a set of curated observability data from Pixie to send it to New Relic using the OpenTelemetry line protocol. The integration leverages PXL scripts retrieve the data from Pixie.
+The Pixie integration pulls a set of curated observability data from Pixie to send it to New Relic using the OpenTelemetry line protocol. The integration leverages PXL scripts to retrieve the data from Pixie.
 
 ## Getting Started
 
-Make sure you have a Pixie account and New Relic account setup and have collected the following information:
+Make sure you have a Pixie account and a New Relic account set up, and have collected the following information:
 
  * [New Relic license key](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/)
  * [Pixie API key](https://docs.pixielabs.ai/using-pixie/api-quick-start/#get-an-api-token)
@@ -56,11 +56,11 @@ SELECT * FROM Span WHERE instrumentation.provider='pixie'
 
 ## Support
 
-New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other customers to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here: https://discuss.newrelic.com/t/new-relic-pixie-integration/143646
+New Relic hosts and moderates an online forum where customers can interact with New Relic employees as well as other users to get help and share best practices. Like all official New Relic open source projects, there's a related Community topic in the New Relic Explorers Hub. You can find this project's topic/threads here: https://discuss.newrelic.com/t/new-relic-pixie-integration/143646
 
 ## Contribute
 
-We encourage your contributions to improve the Pixie integration! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA one time per project.
+We encourage your contributions to improve the Pixie integration! Keep in mind that when you submit your pull request, you'll need to sign the CLA via the click-through using CLA-Assistant. You only have to sign the CLA once per project.
 
 If you have any questions, or to execute our corporate CLA (which is required if your contribution is on behalf of a company), drop us an email at opensource@newrelic.com.
 
@@ -73,8 +73,6 @@ If you believe you have found a security vulnerability in this project or any of
 If you would like to contribute to this project, review [these guidelines](./CONTRIBUTING.md).
 
 To all contributors, we thank you!  Without your contribution, this project would not be what it is today.
-
->TODO We also host a community project page dedicated to [Project Name](<LINK TO https://opensource.newrelic.com/projects/... PAGE>).
 
 ## License
 The New Relic Pixie integration is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
