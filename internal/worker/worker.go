@@ -16,11 +16,6 @@ import (
 	"px.dev/pxapi"
 )
 
-const (
-	defaultSleepTime = 10 * time.Second
-	maxExecutionTime = 9 * time.Second
-)
-
 type Worker interface {
 	Spans(adapter.SpansAdapter, *sync.WaitGroup)
 	Metrics(adapter.MetricsAdapter, *sync.WaitGroup)
@@ -48,7 +43,7 @@ func (w *worker) Metrics(adapter adapter.MetricsAdapter, wg *sync.WaitGroup) {
 		adapter: adapter,
 		metrics: make([]*metricpb.ResourceMetrics, 0),
 	}
-	run(w.ctx, wg, adapter.ID(), adapter.Script(), w.vz, h, w.exporter)
+	w.run(w.ctx, wg, adapter.ID(), adapter.Script(), adapter.CollectIntervalSec(), h)
 }
 
 func (w *worker) Spans(adapter adapter.SpansAdapter, wg *sync.WaitGroup) {
@@ -57,19 +52,21 @@ func (w *worker) Spans(adapter adapter.SpansAdapter, wg *sync.WaitGroup) {
 		adapter: adapter,
 		spans:   make([]*tracepb.ResourceSpans, 0),
 	}
-	run(w.ctx, wg, adapter.ID(), adapter.Script(), w.vz, h, w.exporter)
+	w.run(w.ctx, wg, adapter.ID(), adapter.Script(), adapter.CollectIntervalSec(), h)
 }
 
-func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz *pxapi.VizierClient, h customHandler, exporter exporter.Exporter) {
+func (w *worker) run(ctx context.Context, wg *sync.WaitGroup, name string, script string, collectIntervalSec int64, h customHandler) {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Warn(err)
 			log.Infof("sleep 10 seconds to be recovered")
-			time.Sleep(defaultSleepTime)
-			run(ctx, wg, name, script, vz, h, exporter)
+			time.Sleep(10 * time.Second)
+			w.run(ctx, wg, name, script, collectIntervalSec, h)
 		}
 	}()
 	rm := &ResultMuxer{h}
+	collectInterval := time.Duration(collectIntervalSec) * time.Second
+	maxExecutionTime := time.Duration(collectIntervalSec - 1) * time.Second
 	for {
 		var resultSet *pxapi.ScriptResults
 		select {
@@ -83,7 +80,7 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			pixieCtx, cancelFn := context.WithCancel(ctx)
 			go func() {
 				log.Debugf("executing Pixie script %s\n", name)
-				resultSet, err := vz.ExecuteScript(pixieCtx, script, rm)
+				resultSet, err := w.vz.ExecuteScript(pixieCtx, script, rm)
 				if err != nil && err != io.EOF {
 					ch <- fmt.Errorf("error while executing Pixie script: %s", err)
 					return
@@ -93,7 +90,7 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 					ch <- fmt.Errorf("pixie streaming error: %s", err)
 					return
 				}
-				records := h.send(exporter)
+				records := h.send(w.exporter)
 				log.Debugf("done streaming %d results for %s\n", records, name)
 				ch <- nil
 			}()
@@ -111,7 +108,7 @@ func run(ctx context.Context, wg *sync.WaitGroup, name string, script string, vz
 			if resultSet != nil {
 				resultSet.Close()
 			}
-			sleepTime := start.Add(defaultSleepTime).Sub(time.Now())
+			sleepTime := start.Add(collectInterval).Sub(time.Now())
 			if (sleepTime > 0) {
 				time.Sleep(sleepTime)
 			} else {

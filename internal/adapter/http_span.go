@@ -15,11 +15,11 @@ const (
 	b3TraceIDPadding = "0000000000000000"
 )
 
-const spanPXL = `
-#px:set max_output_rows_per_table=15000
+const spanTemplate = `
+#px:set max_output_rows_per_table=%d
 
 import px
-df = px.DataFrame('http_events', start_time='-10s')
+df = px.DataFrame('http_events', start_time='-%ds')
 df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
@@ -39,15 +39,25 @@ px.display(df, 'http')
 `
 
 type httpSpans struct {
-	clusterName string
+	clusterName        string
+	collectIntervalSec int64
+	script             string
+}
+
+func newHttpSpans(clusterName string, collectIntervalSec int64, spanLimit int64) *httpSpans {
+	return &httpSpans{clusterName, collectIntervalSec, fmt.Sprintf(spanTemplate, spanLimit, collectIntervalSec)}
 }
 
 func (a *httpSpans) ID() string {
 	return "http_spans"
 }
 
+func (a *httpSpans) CollectIntervalSec() int64 {
+	return a.collectIntervalSec
+}
+
 func (a *httpSpans) Script() string {
-	return spanPXL
+	return a.script
 }
 
 func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {

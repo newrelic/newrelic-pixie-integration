@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"fmt"
 	"strconv"
 	"time"
 
@@ -9,11 +10,11 @@ import (
 	"px.dev/pxapi/types"
 )
 
-const httpMetricsPXL = `
-#px:set max_output_rows_per_table=15000
+const httpMetricsTemplate = `
+#px:set max_output_rows_per_table=10000
 
 import px
-df = px.DataFrame(table='http_events', start_time='-10s')
+df = px.DataFrame(table='http_events', start_time='-%ds')
 
 df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
@@ -34,15 +35,25 @@ px.display(df, 'http')
 `
 
 type httpMetrics struct {
-	clusterName string
+	clusterName        string
+	collectIntervalSec int64
+	script             string
+}
+
+func newHttpMetrics(clusterName string, collectIntervalSec int64) *httpMetrics {
+	return &httpMetrics{clusterName, collectIntervalSec,fmt.Sprintf(httpMetricsTemplate, collectIntervalSec)}
 }
 
 func (a *httpMetrics) ID() string {
 	return "http_metrics"
 }
 
+func (a *httpMetrics) CollectIntervalSec() int64 {
+	return a.collectIntervalSec
+}
+
 func (a *httpMetrics) Script() string {
-	return httpMetricsPXL
+	return a.script
 }
 
 func (a *httpMetrics) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {

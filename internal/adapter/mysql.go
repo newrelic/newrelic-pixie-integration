@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"fmt"
 	"time"
 
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
@@ -8,11 +9,11 @@ import (
 	"px.dev/pxapi/types"
 )
 
-var mysqlPXL = `
-#px:set max_output_rows_per_table=15000
+const mysqlTemplate = `
+#px:set max_output_rows_per_table=%d
 
 import px
-df = px.DataFrame('mysql_events', start_time='-10s')
+df = px.DataFrame('mysql_events', start_time='-%ds')
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']	
@@ -27,15 +28,25 @@ px.display(df, 'mysql')
 `
 
 type mysql struct {
-	clusterName string
+	clusterName        string
+	collectIntervalSec int64
+	script             string
+}
+
+func newMysql(clusterName string, collectIntervalSec, spanLimit int64) *mysql {
+	return &mysql{clusterName, collectIntervalSec, fmt.Sprintf(mysqlTemplate, spanLimit, collectIntervalSec)}
 }
 
 func (a *mysql) ID() string {
 	return "db_mysql"
 }
 
+func (a *mysql) CollectIntervalSec() int64 {
+	return a.collectIntervalSec
+}
+
 func (a *mysql) Script() string {
-	return mysqlPXL
+	return a.script
 }
 
 func (a *mysql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
