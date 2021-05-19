@@ -35,10 +35,19 @@ NR_LICENSE_KEY=
 The following environment variables are optional. 
 
 ```
+HTTP_SPAN_LIMIT=5000
+DB_SPAN_LIMIT=1000
+COLLECT_INTERVAL_SEC=10
+HTTP_SPAN_COLLECT_INTERVAL_SEC=10
+JVM_COLLECT_INTERVAL_SEC=10
+MYSQL_COLLECT_INTERVAL_SEC=10
+POSTGRES_COLLECT_INTERVAL_SEC=10
 PIXIE_ENDPOINT=work.withpixie.ai:443
 NR_OTLP_HOST=otlp.nr-data.net:4317
 VERBOSE=true
 ```
+
+The `*_LIMIT` and `*_INTERVAL_SEC` environment variables can be used to control the amount of data that is sent to New Relic. The `COLLECT_INTERVAL_SEC` environment variable sets the collection interval for all PXL scripts. The other `*_INTERVAL_SEC` environment variables are overrides for the individual scripts. Setting the interval to `0` will disable sending that data to New Relic. The smallest valid interval is 2 seconds.
 
 ## Testing
 

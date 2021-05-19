@@ -11,11 +11,11 @@ import (
 	"px.dev/pxapi/types"
 )
 
-const jvmPXL = `
-#px:set max_output_rows_per_table=15000
+const jvmTemplate = `
+#px:set max_output_rows_per_table=10000
 
 import px
-df = px.DataFrame('jvm_stats', start_time='-10s')
+df = px.DataFrame('jvm_stats', start_time='-%ds')
 
 df.container = df.ctx['container_name']
 df.pod = df.ctx['pod']
@@ -74,15 +74,25 @@ type metricDef struct {
 }
 
 type jvm struct {
-	clusterName string
+	clusterName        string
+	collectIntervalSec int64
+	script             string
+}
+
+func newJvm(clusterName string, collectIntervalSec int64) *jvm {
+	return &jvm{clusterName, collectIntervalSec, fmt.Sprintf(jvmTemplate, collectIntervalSec)}
 }
 
 func (a *jvm) ID() string {
 	return "jvm"
 }
 
+func (a *jvm) CollectIntervalSec() int64 {
+	return a.collectIntervalSec
+}
+
 func (a *jvm) Script() string {
-	return jvmPXL
+	return a.script
 }
 
 func (a *jvm) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {

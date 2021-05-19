@@ -20,31 +20,33 @@ var (
 type MetricsAdapter interface {
 	ID() string
 	Script() string
+	CollectIntervalSec() int64
 	Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error)
 }
 
 type SpansAdapter interface {
 	ID() string
 	Script() string
+	CollectIntervalSec() int64
 	Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error)
 }
 
-func JVM(clusterName string) MetricsAdapter {
-	return &jvm{clusterName}
+func JVM(clusterName string, collectIntervalSec int64) MetricsAdapter {
+	return newJvm(clusterName, collectIntervalSec)
 }
 
-func HTTPMetrics(clusterName string) MetricsAdapter {
-	return &httpMetrics{clusterName}
+func HTTPMetrics(clusterName string, collectIntervalSec int64) MetricsAdapter {
+	return newHttpMetrics(clusterName, collectIntervalSec)
 }
 
-func HTTPSpans(clusterName string) SpansAdapter {
-	return &httpSpans{clusterName}
+func HTTPSpans(clusterName string, collectIntervalSec, spanLimit int64) SpansAdapter {
+	return newHttpSpans(clusterName, collectIntervalSec, spanLimit)
 }
 
-func MySQL(clusterName string) SpansAdapter {
-	return &mysql{clusterName}
+func MySQL(clusterName string, collectIntervalSec, spanLimit int64) SpansAdapter {
+	return newMysql(clusterName, collectIntervalSec, spanLimit)
 }
 
-func PgSQL(clusterName string) SpansAdapter {
-	return &pogsql{clusterName}
+func PgSQL(clusterName string, collectIntervalSec, spanLimit int64) SpansAdapter {
+	return newPogsql(clusterName, collectIntervalSec, spanLimit)
 }

@@ -1,6 +1,7 @@
 package adapter
 
 import (
+	"fmt"
 	"time"
 
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
@@ -8,11 +9,11 @@ import (
 	"px.dev/pxapi/types"
 )
 
-var pgsqllPXL = `
-#px:set max_output_rows_per_table=15000
+const pgsqlTemplate = `
+#px:set max_output_rows_per_table=%d
 
 import px
-df = px.DataFrame('pgsql_events', start_time='-10s')
+df = px.DataFrame('pgsql_events', start_time='-%ds')
 df.pod = df.ctx['pod']
 df.service = df.ctx['service']
 df.namespace = df.ctx['namespace']	
@@ -27,15 +28,25 @@ px.display(df, 'pgsql')
 `
 
 type pogsql struct {
-	clusterName string
+	clusterName        string
+	collectIntervalSec int64
+	script             string
+}
+
+func newPogsql(clusterName string, collectIntervalSec, spanLimit int64) *pogsql {
+	return &pogsql{clusterName, collectIntervalSec, fmt.Sprintf(pgsqlTemplate, spanLimit, collectIntervalSec)}
 }
 
 func (a *pogsql) ID() string {
 	return "db_postgres"
 }
 
+func (a *pogsql) CollectIntervalSec() int64 {
+	return a.collectIntervalSec
+}
+
 func (a *pogsql) Script() string {
-	return pgsqllPXL
+	return a.script
 }
 
 func (a *pogsql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {

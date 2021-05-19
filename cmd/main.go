@@ -57,12 +57,44 @@ func main() {
 
 func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter, wg *sync.WaitGroup) {
 	w := worker.Build(ctx, cfg, vz, exporter)
-	go w.Spans(adapter.HTTPSpans(cfg.ClusterName()), wg)
-	go w.Spans(adapter.MySQL(cfg.ClusterName()), wg)
-	go w.Spans(adapter.PgSQL(cfg.ClusterName()), wg)
-	go w.Metrics(adapter.HTTPMetrics(cfg.ClusterName()), wg)
-	go w.Metrics(adapter.JVM(cfg.ClusterName()), wg)
-	wg.Add(5)
+	if cfg.HttpSpanCollectInterval() > 1 {
+		httpSpans := adapter.HTTPSpans(cfg.ClusterName(), cfg.HttpSpanCollectInterval(), cfg.HttpSpanLimit())
+		logWorkerStart(httpSpans.ID(), httpSpans.CollectIntervalSec(), cfg.HttpSpanLimit(), httpSpans.Script())
+		go w.Spans(httpSpans, wg)
+		wg.Add(1)
+	}
+	if cfg.MysqlCollectInterval() > 1 {
+		mysql := adapter.MySQL(cfg.ClusterName(), cfg.MysqlCollectInterval(), cfg.DbSpanLimit())
+		logWorkerStart(mysql.ID(), mysql.CollectIntervalSec(), cfg.DbSpanLimit(), mysql.Script())
+		go w.Spans(mysql, wg)
+		wg.Add(1)
+	}
+	if cfg.PostgresCollectInterval() > 1 {
+		pgsql := adapter.PgSQL(cfg.ClusterName(), cfg.PostgresCollectInterval(), cfg.DbSpanLimit())
+		logWorkerStart(pgsql.ID(), pgsql.CollectIntervalSec(), cfg.DbSpanLimit(), pgsql.Script())
+		go w.Spans(pgsql, wg)
+		wg.Add(1)
+	}
+	if cfg.HttpMetricCollectInterval() > 1 {
+		httpMetrics := adapter.HTTPMetrics(cfg.ClusterName(), cfg.HttpMetricCollectInterval())
+		logWorkerStart(httpMetrics.ID(), httpMetrics.CollectIntervalSec(), -1, httpMetrics.Script())
+		go w.Metrics(httpMetrics, wg)
+		wg.Add(1)
+	}
+	if cfg.JvmCollectInterval() > 1 {
+		jvm := adapter.JVM(cfg.ClusterName(), cfg.JvmCollectInterval())
+		logWorkerStart(jvm.ID(), jvm.CollectIntervalSec(), -1, jvm.Script())
+		go w.Metrics(jvm, wg)
+		wg.Add(1)
+	}
+}
+
+func logWorkerStart(name string, intervalSec, spanLimit int64, script string) {
+	if spanLimit != -1 {
+		log.Debugf("Starting %s worker with %d second interval and %d span limit. Script: %s", name, intervalSec, spanLimit, script)
+	} else {
+		log.Debugf("Starting %s worker with %d second interval. Script: %s", name, intervalSec, script)
+	}
 }
 
 func setExporterConnection(ctx context.Context, cfg config.Exporter, tries int, sleepTime time.Duration) (exp exporter.Exporter, err error) {

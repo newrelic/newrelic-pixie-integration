@@ -3,6 +3,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -12,17 +13,28 @@ import (
 )
 
 const (
-	envVerbose        = "VERBOSE"
-	envNROTLPHost     = "NR_OTLP_HOST"
-	envNRLicenseKEy   = "NR_LICENSE_KEY"
-	envPixieClusterID = "PIXIE_CLUSTER_ID"
-	envPixieEndpoint  = "PIXIE_ENDPOINT"
-	envPixieAPIKey    = "PIXIE_API_KEY"
-	envClusterName    = "CLUSTER_NAME"
-	defPixieHostname  = "work.withpixie.ai:443"
-	endpointEU        = "otlp.eu01.nr-data.net:4317"
-	endpointUSA       = "otlp.nr-data.net:4317"
-	boolTrue          = "true"
+	envVerbose                   = "VERBOSE"
+	envNROTLPHost                = "NR_OTLP_HOST"
+	envNRLicenseKEy              = "NR_LICENSE_KEY"
+	envPixieClusterID            = "PIXIE_CLUSTER_ID"
+	envPixieEndpoint             = "PIXIE_ENDPOINT"
+	envPixieAPIKey               = "PIXIE_API_KEY"
+	envClusterName               = "CLUSTER_NAME"
+	envHttpSpanLimit             = "HTTP_SPAN_LIMIT"
+	envDbSpanLimit               = "DB_SPAN_LIMIT"
+	envCollectInterval           = "COLLECT_INTERVAL_SEC"
+	envHttpMetricCollectInterval = "HTTP_METRIC_COLLECT_INTERVAL_SEC"
+	envHttpSpanCollectInterval   = "HTTP_SPAN_COLLECT_INTERVAL_SEC"
+	envJvmCollectInterval        = "JVM_COLLECT_INTERVAL_SEC"
+	envMysqlCollectInterval      = "MYSQL_COLLECT_INTERVAL_SEC"
+	envPostgresCollectInterval   = "POSTGRES_COLLECT_INTERVAL_SEC"
+	defPixieHostname             = "work.withpixie.ai:443"
+	endpointEU                   = "otlp.eu01.nr-data.net:4317"
+	endpointUSA                  = "otlp.nr-data.net:4317"
+	boolTrue                     = "true"
+	defHttpSpanLimit             = 5000
+	defDbSpanLimit               = 1000
+	defCollectInterval           = 10
 )
 
 var (
@@ -51,11 +63,42 @@ func setUpConfig() error {
 	pixieClusterID := os.Getenv(envPixieClusterID)
 	pixieAPIKey := os.Getenv(envPixieAPIKey)
 	clusterName := os.Getenv(envClusterName)
-	pixieHost := os.Getenv(envPixieEndpoint)
-	if pixieHost == "" {
-		pixieHost = defPixieHostname
-	}
+	pixieHost := getEnvWithDefault(envPixieEndpoint, defPixieHostname)
+
 	var err error
+	httpSpanLimit, err := getIntEnvWithDefault(envHttpSpanLimit, defHttpSpanLimit)
+	if err != nil {
+		return err
+	}
+	dbSpanLimit, err := getIntEnvWithDefault(envDbSpanLimit, defDbSpanLimit)
+	if err != nil {
+		return err
+	}
+	collectInterval, err := getIntEnvWithDefault(envCollectInterval, defCollectInterval)
+	if err != nil {
+		return err
+	}
+	httpMetricCollectInterval, err := getIntEnvWithDefault(envHttpMetricCollectInterval, collectInterval)
+	if err != nil {
+		return err
+	}
+	httpSpanCollectInterval, err := getIntEnvWithDefault(envHttpSpanCollectInterval, collectInterval)
+	if err != nil {
+		return err
+	}
+	jvmCollectInterval, err := getIntEnvWithDefault(envJvmCollectInterval, collectInterval)
+	if err != nil {
+		return err
+	}
+	mysqlCollectInterval, err := getIntEnvWithDefault(envMysqlCollectInterval, collectInterval)
+	if err != nil {
+		return err
+	}
+	postgresCollectInterval, err := getIntEnvWithDefault(envPostgresCollectInterval, collectInterval)
+	if err != nil {
+		return err
+	}
+
 	nrHostname, err = getEndpoint(nrHostname, nrLicenseKey)
 	if err != nil {
 		return fmt.Errorf("error getting endpoint for license: %w", err)
@@ -68,6 +111,13 @@ func setUpConfig() error {
 		},
 		worker: &worker{
 			clusterName: clusterName,
+			httpSpanLimit: httpSpanLimit,
+			dbSpanLimit: dbSpanLimit,
+			httpMetricCollectInterval: httpMetricCollectInterval,
+			httpSpanCollectInterval: httpSpanCollectInterval,
+			jvmCollectInterval: jvmCollectInterval,
+			mysqlCollectInterval: mysqlCollectInterval,
+			postgresCollectInterval: postgresCollectInterval,
 		},
 		exporter: &exporter{
 			licenseKey: nrLicenseKey,
@@ -81,6 +131,26 @@ func setUpConfig() error {
 		},
 	}
 	return instance.validate()
+}
+
+func getEnvWithDefault(key, defaultValue string) string {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+func getIntEnvWithDefault(key string, defaultValue int64) (int64, error) {
+	value := os.Getenv(key)
+	if value == "" {
+		return defaultValue, nil
+	}
+	i, err := strconv.ParseInt(value, 10, 64)
+	if err != nil {
+		return 0, fmt.Errorf("Environment variable %s is not an integer.", key)
+	}
+	return i, nil
 }
 
 type Config interface {
@@ -223,11 +293,25 @@ func (p *pixie) Host() string {
 
 type Worker interface {
 	ClusterName() string
+	HttpSpanLimit() int64
+	DbSpanLimit() int64
+	HttpMetricCollectInterval() int64
+	HttpSpanCollectInterval() int64
+	JvmCollectInterval() int64
+	MysqlCollectInterval() int64
+	PostgresCollectInterval() int64
 	validate() error
 }
 
 type worker struct {
 	clusterName string
+	httpSpanLimit int64
+	dbSpanLimit int64
+	httpMetricCollectInterval int64
+	httpSpanCollectInterval int64
+	jvmCollectInterval int64
+	mysqlCollectInterval int64
+	postgresCollectInterval int64
 }
 
 func (a *worker) validate() error {
@@ -239,6 +323,34 @@ func (a *worker) validate() error {
 
 func (a *worker) ClusterName() string {
 	return a.clusterName
+}
+
+func (a *worker) HttpSpanLimit() int64 {
+	return a.httpSpanLimit
+}
+
+func (a *worker) DbSpanLimit() int64 {
+	return a.dbSpanLimit
+}
+
+func (a *worker) HttpMetricCollectInterval() int64 {
+	return a.httpMetricCollectInterval
+}
+
+func (a *worker) HttpSpanCollectInterval() int64 {
+	return a.httpSpanCollectInterval
+}
+
+func (a *worker) JvmCollectInterval() int64 {
+	return a.jvmCollectInterval
+}
+
+func (a *worker) MysqlCollectInterval() int64 {
+	return a.mysqlCollectInterval
+}
+
+func (a *worker) PostgresCollectInterval() int64 {
+	return a.postgresCollectInterval
 }
 
 func getEndpoint(hostname, licenseKey string) (string, error) {
