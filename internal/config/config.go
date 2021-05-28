@@ -32,8 +32,8 @@ const (
 	endpointEU                   = "otlp.eu01.nr-data.net:4317"
 	endpointUSA                  = "otlp.nr-data.net:4317"
 	boolTrue                     = "true"
-	defHttpSpanLimit             = 5000
-	defDbSpanLimit               = 1000
+	defHttpSpanLimit             = 1500
+	defDbSpanLimit               = 500
 	defCollectInterval           = 10
 )
 
