@@ -40,12 +40,13 @@ px.display(df, 'http')
 
 type httpSpans struct {
 	clusterName        string
+	clusterID          string
 	collectIntervalSec int64
 	script             string
 }
 
-func newHttpSpans(clusterName string, collectIntervalSec int64, spanLimit int64) *httpSpans {
-	return &httpSpans{clusterName, collectIntervalSec, fmt.Sprintf(spanTemplate, spanLimit, collectIntervalSec)}
+func newHttpSpans(clusterName, clusterID string, collectIntervalSec int64, spanLimit int64) *httpSpans {
+	return &httpSpans{clusterName, clusterID, collectIntervalSec, fmt.Sprintf(spanTemplate, spanLimit, collectIntervalSec)}
 }
 
 func (a *httpSpans) ID() string {
@@ -93,7 +94,7 @@ func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	method := r.GetDatum("req_method").String()
 	statusCode := r.GetDatum("resp_status").(*types.Int64Value).Value()
 	userAgent := r.GetDatum("user_agent").String()
-	resources := createResources(r, a.clusterName)
+	resources := createResources(r, a.clusterName, a.clusterID)
 	output := make([]*tracepb.ResourceSpans, 0)
 
 	for i := range parentServices {

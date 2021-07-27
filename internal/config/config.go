@@ -41,8 +41,8 @@ var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""
 	buildDate          = ""
-	once     sync.Once
-	instance Config
+	once               sync.Once
+	instance           Config
 )
 
 func GetConfig() (Config, error) {
@@ -110,14 +110,15 @@ func setUpConfig() error {
 			version:   integrationVersion,
 		},
 		worker: &worker{
-			clusterName: clusterName,
-			httpSpanLimit: httpSpanLimit,
-			dbSpanLimit: dbSpanLimit,
+			clusterName:               clusterName,
+			pixieClusterID:            pixieClusterID,
+			httpSpanLimit:             httpSpanLimit,
+			dbSpanLimit:               dbSpanLimit,
 			httpMetricCollectInterval: httpMetricCollectInterval,
-			httpSpanCollectInterval: httpSpanCollectInterval,
-			jvmCollectInterval: jvmCollectInterval,
-			mysqlCollectInterval: mysqlCollectInterval,
-			postgresCollectInterval: postgresCollectInterval,
+			httpSpanCollectInterval:   httpSpanCollectInterval,
+			jvmCollectInterval:        jvmCollectInterval,
+			mysqlCollectInterval:      mysqlCollectInterval,
+			postgresCollectInterval:   postgresCollectInterval,
 		},
 		exporter: &exporter{
 			licenseKey: nrLicenseKey,
@@ -293,6 +294,7 @@ func (p *pixie) Host() string {
 
 type Worker interface {
 	ClusterName() string
+	PixieClusterID() string
 	HttpSpanLimit() int64
 	DbSpanLimit() int64
 	HttpMetricCollectInterval() int64
@@ -304,14 +306,15 @@ type Worker interface {
 }
 
 type worker struct {
-	clusterName string
-	httpSpanLimit int64
-	dbSpanLimit int64
+	clusterName               string
+	pixieClusterID            string
+	httpSpanLimit             int64
+	dbSpanLimit               int64
 	httpMetricCollectInterval int64
-	httpSpanCollectInterval int64
-	jvmCollectInterval int64
-	mysqlCollectInterval int64
-	postgresCollectInterval int64
+	httpSpanCollectInterval   int64
+	jvmCollectInterval        int64
+	mysqlCollectInterval      int64
+	postgresCollectInterval   int64
 }
 
 func (a *worker) validate() error {
@@ -323,6 +326,10 @@ func (a *worker) validate() error {
 
 func (a *worker) ClusterName() string {
 	return a.clusterName
+}
+
+func (a *worker) PixieClusterID() string {
+	return a.pixieClusterID
 }
 
 func (a *worker) HttpSpanLimit() int64 {

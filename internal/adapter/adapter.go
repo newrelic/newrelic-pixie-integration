@@ -31,22 +31,22 @@ type SpansAdapter interface {
 	Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error)
 }
 
-func JVM(clusterName string, collectIntervalSec int64) MetricsAdapter {
-	return newJvm(clusterName, collectIntervalSec)
+func JVM(clusterName, clusterID string, collectIntervalSec int64) MetricsAdapter {
+	return newJvm(clusterName, clusterID, collectIntervalSec)
 }
 
-func HTTPMetrics(clusterName string, collectIntervalSec int64) MetricsAdapter {
-	return newHttpMetrics(clusterName, collectIntervalSec)
+func HTTPMetrics(clusterName, clusterID string, collectIntervalSec int64) MetricsAdapter {
+	return newHttpMetrics(clusterName, clusterID, collectIntervalSec)
 }
 
-func HTTPSpans(clusterName string, collectIntervalSec, spanLimit int64) SpansAdapter {
-	return newHttpSpans(clusterName, collectIntervalSec, spanLimit)
+func HTTPSpans(clusterName, clusterID string, collectIntervalSec, spanLimit int64) SpansAdapter {
+	return newHttpSpans(clusterName, clusterID, collectIntervalSec, spanLimit)
 }
 
-func MySQL(clusterName string, collectIntervalSec, spanLimit int64) SpansAdapter {
-	return newMysql(clusterName, collectIntervalSec, spanLimit)
+func MySQL(clusterName, clusterID string, collectIntervalSec, spanLimit int64) SpansAdapter {
+	return newMysql(clusterName, clusterID, collectIntervalSec, spanLimit)
 }
 
-func PgSQL(clusterName string, collectIntervalSec, spanLimit int64) SpansAdapter {
-	return newPogsql(clusterName, collectIntervalSec, spanLimit)
+func PgSQL(clusterName, clusterID string, collectIntervalSec, spanLimit int64) SpansAdapter {
+	return newPogsql(clusterName, clusterID, collectIntervalSec, spanLimit)
 }

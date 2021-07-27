@@ -38,9 +38,13 @@ func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, 
 	return
 }
 
-func creteResourceFunc(r *types.Record, namespace, pod, cluster string) func([]string) []resourcepb.Resource {
+func createResourceFunc(r *types.Record, namespace, pod, clusterName, clusterId string) func([]string) []resourcepb.Resource {
 	resource := resourcepb.Resource{
 		Attributes: []*commonpb.KeyValue{
+			{
+				Key:   "k8s.cluster.id",
+				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: clusterId}},
+			},
 			{
 				Key:   "instrumentation.provider",
 				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: instrumentationName}},
@@ -64,7 +68,7 @@ func creteResourceFunc(r *types.Record, namespace, pod, cluster string) func([]s
 			},
 			{
 				Key:   "k8s.cluster.name",
-				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: cluster}},
+				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: clusterName}},
 			},
 		},
 	}
@@ -81,9 +85,9 @@ func creteResourceFunc(r *types.Record, namespace, pod, cluster string) func([]s
 	}
 }
 
-func createResources(r *types.Record, cluster string) []resourcepb.Resource {
+func createResources(r *types.Record, clusterName, clusterId string) []resourcepb.Resource {
 	namespace, services, pod := takeNamespaceServiceAndPod(r)
-	return creteResourceFunc(r, namespace, pod, cluster)(services)
+	return createResourceFunc(r, namespace, pod, clusterName, clusterId)(services)
 }
 
 func createArrayOfSpans(resources []resourcepb.Resource, il []*tracepb.InstrumentationLibrarySpans) []*tracepb.ResourceSpans {
