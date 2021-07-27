@@ -29,13 +29,13 @@ px.display(df, 'mysql')
 
 type mysql struct {
 	clusterName        string
-	clusterID          string
+	pixieClusterID     string
 	collectIntervalSec int64
 	script             string
 }
 
-func newMysql(clusterName, clusterID string, collectIntervalSec, spanLimit int64) *mysql {
-	return &mysql{clusterName, clusterID, collectIntervalSec, fmt.Sprintf(mysqlTemplate, spanLimit, collectIntervalSec)}
+func newMysql(clusterName, pixieClusterID string, collectIntervalSec, spanLimit int64) *mysql {
+	return &mysql{clusterName, pixieClusterID, collectIntervalSec, fmt.Sprintf(mysqlTemplate, spanLimit, collectIntervalSec)}
 }
 
 func (a *mysql) ID() string {
@@ -55,7 +55,7 @@ func (a *mysql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	traceID := idGenerator.NewTraceID()
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	duration := time.Duration(r.GetDatum("latency").(*types.Int64Value).Value())
-	resources := createResources(r, a.clusterName, a.clusterID)
+	resources := createResources(r, a.clusterName, a.pixieClusterID)
 	return createArrayOfSpans(resources, []*tracepb.InstrumentationLibrarySpans{
 		{
 			InstrumentationLibrary: instrumentationLibrary,

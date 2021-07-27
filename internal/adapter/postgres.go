@@ -29,13 +29,13 @@ px.display(df, 'pgsql')
 
 type pogsql struct {
 	clusterName        string
-	clusterID          string
+	pixieClusterID     string
 	collectIntervalSec int64
 	script             string
 }
 
-func newPogsql(clusterName, clusterID string, collectIntervalSec, spanLimit int64) *pogsql {
-	return &pogsql{clusterName, clusterID, collectIntervalSec, fmt.Sprintf(pgsqlTemplate, spanLimit, collectIntervalSec)}
+func newPogsql(clusterName, pixieClusterID string, collectIntervalSec, spanLimit int64) *pogsql {
+	return &pogsql{clusterName, pixieClusterID, collectIntervalSec, fmt.Sprintf(pgsqlTemplate, spanLimit, collectIntervalSec)}
 }
 
 func (a *pogsql) ID() string {
@@ -55,7 +55,7 @@ func (a *pogsql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	traceID := idGenerator.NewTraceID()
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	duration := time.Duration(r.GetDatum("latency").(*types.Int64Value).Value())
-	resources := createResources(r, a.clusterName, a.clusterID)
+	resources := createResources(r, a.clusterName, a.pixieClusterID)
 	return createArrayOfSpans(resources, []*tracepb.InstrumentationLibrarySpans{
 		{
 			InstrumentationLibrary: instrumentationLibrary,

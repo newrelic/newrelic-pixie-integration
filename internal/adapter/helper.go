@@ -38,12 +38,12 @@ func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, 
 	return
 }
 
-func createResourceFunc(r *types.Record, namespace, pod, clusterName, clusterId string) func([]string) []resourcepb.Resource {
+func createResourceFunc(r *types.Record, namespace, pod, clusterName, pixieClusterID string) func([]string) []resourcepb.Resource {
 	resource := resourcepb.Resource{
 		Attributes: []*commonpb.KeyValue{
 			{
 				Key:   "k8s.cluster.id",
-				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: clusterId}},
+				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: pixieClusterID}},
 			},
 			{
 				Key:   "instrumentation.provider",
@@ -85,9 +85,9 @@ func createResourceFunc(r *types.Record, namespace, pod, clusterName, clusterId 
 	}
 }
 
-func createResources(r *types.Record, clusterName, clusterId string) []resourcepb.Resource {
+func createResources(r *types.Record, clusterName, pixieClusterID string) []resourcepb.Resource {
 	namespace, services, pod := takeNamespaceServiceAndPod(r)
-	return createResourceFunc(r, namespace, pod, clusterName, clusterId)(services)
+	return createResourceFunc(r, namespace, pod, clusterName, pixieClusterID)(services)
 }
 
 func createArrayOfSpans(resources []resourcepb.Resource, il []*tracepb.InstrumentationLibrarySpans) []*tracepb.ResourceSpans {

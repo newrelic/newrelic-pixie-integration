@@ -36,13 +36,13 @@ px.display(df, 'http')
 
 type httpMetrics struct {
 	clusterName        string
-	clusterId          string
+	pixieClusterID     string
 	collectIntervalSec int64
 	script             string
 }
 
-func newHttpMetrics(clusterName string, clusterId string, collectIntervalSec int64) *httpMetrics {
-	return &httpMetrics{clusterName, clusterId, collectIntervalSec, fmt.Sprintf(httpMetricsTemplate, collectIntervalSec)}
+func newHttpMetrics(clusterName string, pixieClusterID string, collectIntervalSec int64) *httpMetrics {
+	return &httpMetrics{clusterName, pixieClusterID, collectIntervalSec, fmt.Sprintf(httpMetricsTemplate, collectIntervalSec)}
 }
 
 func (a *httpMetrics) ID() string {
@@ -65,7 +65,7 @@ func (a *httpMetrics) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error
 	latSum := float64(r.GetDatum("latency_sum").(*types.Int64Value).Value()) / 1000000
 	latCount := float64(r.GetDatum("latency_count").(*types.Int64Value).Value())
 
-	resources := createResources(r, a.clusterName, a.clusterId)
+	resources := createResources(r, a.clusterName, a.pixieClusterID)
 
 	return createArrayOfMetrics(resources, []*metricpb.InstrumentationLibraryMetrics{
 		{
