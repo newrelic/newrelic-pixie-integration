@@ -42,7 +42,7 @@ func createResourceFunc(r *types.Record, namespace, pod, clusterName, pixieClust
 	resource := resourcepb.Resource{
 		Attributes: []*commonpb.KeyValue{
 			{
-				Key:   "k8s.cluster.id",
+				Key:   "pixie.cluster.id",
 				Value: &commonpb.AnyValue{Value: &commonpb.AnyValue_StringValue{StringValue: pixieClusterID}},
 			},
 			{
