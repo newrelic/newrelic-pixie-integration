@@ -75,12 +75,13 @@ type metricDef struct {
 
 type jvm struct {
 	clusterName        string
+	pixieClusterID     string
 	collectIntervalSec int64
 	script             string
 }
 
-func newJvm(clusterName string, collectIntervalSec int64) *jvm {
-	return &jvm{clusterName, collectIntervalSec, fmt.Sprintf(jvmTemplate, collectIntervalSec)}
+func newJvm(clusterName, pixieClusterID string, collectIntervalSec int64) *jvm {
+	return &jvm{clusterName, pixieClusterID, collectIntervalSec, fmt.Sprintf(jvmTemplate, collectIntervalSec)}
 }
 
 func (a *jvm) ID() string {
@@ -98,7 +99,7 @@ func (a *jvm) Script() string {
 func (a *jvm) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	instrumentationLibraries := make([]*metricpb.InstrumentationLibraryMetrics, len(metricMapping))
-	resources := createResources(r, a.clusterName)
+	resources := createResources(r, a.clusterName, a.pixieClusterID)
 	index := 0
 	for metricName, def := range metricMapping {
 		value, err := getValueFromJVMMetric(r, metricName)
