@@ -22,6 +22,7 @@ df.container = df.ctx['container_name']
 df.normed_query_struct = px.normalize_mysql(df.req_body, df.req_cmd)
 df.query = px.pluck(df.normed_query_struct, 'query')
 df = df[df.query != ""]
+df = df[df.trace_role == 1]
 
 df = df[['time_', 'container', 'service', 'pod', 'namespace', 'query', 'latency']]
 px.display(df, 'mysql')
