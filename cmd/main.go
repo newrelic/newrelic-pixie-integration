@@ -43,8 +43,13 @@ func main() {
 		log.Error(err)
 		os.Exit(1)
 	}
+	resourceHelper, err := adapter.NewResourceHelper(cfg.Worker().ExcludePods(), cfg.Worker().ExcludeNamespaces())
+	if err != nil {
+		log.Error(err)
+		os.Exit(1)
+	}
 	var wg sync.WaitGroup
-	runWorkers(ctx, cfg.Worker(), vz, exporter, &wg)
+	runWorkers(ctx, cfg.Worker(), vz, exporter, resourceHelper, &wg)
 	go func() {
 		c := make(chan os.Signal, 1)
 		signal.Notify(c, os.Interrupt, syscall.SIGTERM)
@@ -55,8 +60,8 @@ func main() {
 	wg.Wait()
 }
 
-func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter, wg *sync.WaitGroup) {
-	w := worker.Build(ctx, cfg, vz, exporter)
+func runWorkers(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter, resourceHelper *adapter.ResourceHelper, wg *sync.WaitGroup) {
+	w := worker.Build(ctx, cfg, vz, exporter, resourceHelper)
 	if cfg.HttpSpanCollectInterval() > 1 {
 		httpSpans := adapter.HTTPSpans(cfg.ClusterName(), cfg.PixieClusterID(), cfg.HttpSpanCollectInterval(), cfg.HttpSpanLimit())
 		logWorkerStart(httpSpans.ID(), httpSpans.CollectIntervalSec(), cfg.HttpSpanLimit(), httpSpans.Script())

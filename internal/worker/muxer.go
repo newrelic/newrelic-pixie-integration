@@ -28,14 +28,16 @@ type handler struct{}
 
 type metricsHandler struct {
 	*handler
-	adapter adapter.MetricsAdapter
-	metrics []*metricpb.ResourceMetrics
+	adapter        adapter.MetricsAdapter
+	resourceHelper *adapter.ResourceHelper
+	metrics        []*metricpb.ResourceMetrics
 }
 
 type spansHandler struct {
 	*handler
-	adapter adapter.SpansAdapter
-	spans   []*tracepb.ResourceSpans
+	adapter        adapter.SpansAdapter
+	resourceHelper *adapter.ResourceHelper
+	spans          []*tracepb.ResourceSpans
 }
 
 func (w *handler) HandleInit(ctx context.Context, metadata types.TableMetadata) error {
@@ -46,17 +48,17 @@ func (w *handler) HandleDone(ctx context.Context) error {
 	return nil
 }
 
-func (w *metricsHandler) HandleRecord(ctx context.Context, r *types.Record) error {
-	metrics, err := w.adapter.Adapt(r)
+func (h *metricsHandler) HandleRecord(ctx context.Context, r *types.Record) error {
+	metrics, err := h.adapter.Adapt(h.resourceHelper, r)
 	if err != nil {
 		return err
 	}
-	w.metrics = append(w.metrics, metrics...)
+	h.metrics = append(h.metrics, metrics...)
 	return nil
 }
 
 func (h *spansHandler) HandleRecord(ctx context.Context, r *types.Record) error {
-	spans, err := h.adapter.Adapt(r)
+	spans, err := h.adapter.Adapt(h.resourceHelper, r)
 	if err != nil {
 		return err
 	}

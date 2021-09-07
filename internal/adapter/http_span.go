@@ -61,7 +61,7 @@ func (a *httpSpans) Script() string {
 	return a.script
 }
 
-func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
+func (a *httpSpans) Adapt(rh *ResourceHelper, r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	spanID, err := getSpanID(r, "span_id")
 	if err != nil {
 		return nil, err
@@ -94,7 +94,7 @@ func (a *httpSpans) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	method := r.GetDatum("req_method").String()
 	statusCode := r.GetDatum("resp_status").(*types.Int64Value).Value()
 	userAgent := r.GetDatum("user_agent").String()
-	resources := createResources(r, a.clusterName, a.pixieClusterID)
+	resources := rh.createResources(r, a.clusterName, a.pixieClusterID)
 	output := make([]*tracepb.ResourceSpans, 0)
 
 	for i := range parentServices {

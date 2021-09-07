@@ -96,10 +96,10 @@ func (a *jvm) Script() string {
 	return a.script
 }
 
-func (a *jvm) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
+func (a *jvm) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	instrumentationLibraries := make([]*metricpb.InstrumentationLibraryMetrics, len(metricMapping))
-	resources := createResources(r, a.clusterName, a.pixieClusterID)
+	resources := rh.createResources(r, a.clusterName, a.pixieClusterID)
 	index := 0
 	for metricName, def := range metricMapping {
 		value, err := getValueFromJVMMetric(r, metricName)

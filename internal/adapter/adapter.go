@@ -21,14 +21,14 @@ type MetricsAdapter interface {
 	ID() string
 	Script() string
 	CollectIntervalSec() int64
-	Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error)
+	Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.ResourceMetrics, error)
 }
 
 type SpansAdapter interface {
 	ID() string
 	Script() string
 	CollectIntervalSec() int64
-	Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error)
+	Adapt(rh *ResourceHelper, r *types.Record) ([]*tracepb.ResourceSpans, error)
 }
 
 func JVM(clusterName, pixieClusterID string, collectIntervalSec int64) MetricsAdapter {

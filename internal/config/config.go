@@ -28,6 +28,8 @@ const (
 	envJvmCollectInterval        = "JVM_COLLECT_INTERVAL_SEC"
 	envMysqlCollectInterval      = "MYSQL_COLLECT_INTERVAL_SEC"
 	envPostgresCollectInterval   = "POSTGRES_COLLECT_INTERVAL_SEC"
+	envExcludePods               = "EXCLUDE_PODS"
+	envExcludeNamespaces         = "EXCLUDE_NAMESPACES"
 	defPixieHostname             = "work.withpixie.ai:443"
 	endpointEU                   = "otlp.eu01.nr-data.net:4317"
 	endpointUSA                  = "otlp.nr-data.net:4317"
@@ -64,6 +66,8 @@ func setUpConfig() error {
 	pixieAPIKey := os.Getenv(envPixieAPIKey)
 	clusterName := os.Getenv(envClusterName)
 	pixieHost := getEnvWithDefault(envPixieEndpoint, defPixieHostname)
+	excludePods := os.Getenv(envExcludePods)
+	excludeNamespaces := os.Getenv(envExcludeNamespaces)
 
 	var err error
 	httpSpanLimit, err := getIntEnvWithDefault(envHttpSpanLimit, defHttpSpanLimit)
@@ -119,6 +123,8 @@ func setUpConfig() error {
 			jvmCollectInterval:        jvmCollectInterval,
 			mysqlCollectInterval:      mysqlCollectInterval,
 			postgresCollectInterval:   postgresCollectInterval,
+			excludePods:               excludePods,
+			excludeNamespaces:         excludeNamespaces,
 		},
 		exporter: &exporter{
 			licenseKey: nrLicenseKey,
@@ -293,16 +299,18 @@ func (p *pixie) Host() string {
 }
 
 type Worker interface {
-	ClusterName() string
-	PixieClusterID() string
-	HttpSpanLimit() int64
-	DbSpanLimit() int64
+	ClusterName()               string
+	PixieClusterID()            string
+	HttpSpanLimit()             int64
+	DbSpanLimit()               int64
 	HttpMetricCollectInterval() int64
-	HttpSpanCollectInterval() int64
-	JvmCollectInterval() int64
-	MysqlCollectInterval() int64
-	PostgresCollectInterval() int64
-	validate() error
+	HttpSpanCollectInterval()   int64
+	JvmCollectInterval()        int64
+	MysqlCollectInterval()      int64
+	PostgresCollectInterval()   int64
+	ExcludePods()               string
+	ExcludeNamespaces()         string
+	validate()                  error
 }
 
 type worker struct {
@@ -315,6 +323,8 @@ type worker struct {
 	jvmCollectInterval        int64
 	mysqlCollectInterval      int64
 	postgresCollectInterval   int64
+	excludePods               string
+	excludeNamespaces         string
 }
 
 func (a *worker) validate() error {
@@ -358,6 +368,14 @@ func (a *worker) MysqlCollectInterval() int64 {
 
 func (a *worker) PostgresCollectInterval() int64 {
 	return a.postgresCollectInterval
+}
+
+func (a *worker) ExcludePods() string {
+	return a.excludePods
+}
+
+func (a *worker) ExcludeNamespaces() string {
+	return a.excludeNamespaces
 }
 
 func getEndpoint(hostname, licenseKey string) (string, error) {

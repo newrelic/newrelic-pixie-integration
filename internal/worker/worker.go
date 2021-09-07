@@ -26,14 +26,16 @@ type worker struct {
 	clusterName string
 	vz          *pxapi.VizierClient
 	exporter    exporter.Exporter
+	resourceHelper *adapter.ResourceHelper
 }
 
-func Build(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter) Worker {
+func Build(ctx context.Context, cfg config.Worker, vz *pxapi.VizierClient, exporter exporter.Exporter, resourceHelper *adapter.ResourceHelper) Worker {
 	return &worker{
-		ctx:         ctx,
-		clusterName: cfg.ClusterName(),
-		vz:          vz,
-		exporter:    exporter,
+		ctx:            ctx,
+		clusterName:    cfg.ClusterName(),
+		vz:             vz,
+		exporter:       exporter,
+		resourceHelper: resourceHelper,
 	}
 }
 
@@ -41,6 +43,7 @@ func (w *worker) Metrics(adapter adapter.MetricsAdapter, wg *sync.WaitGroup) {
 	h := &metricsHandler{
 		handler: &handler{},
 		adapter: adapter,
+		resourceHelper: w.resourceHelper,
 		metrics: make([]*metricpb.ResourceMetrics, 0),
 	}
 	w.run(w.ctx, wg, adapter.ID(), adapter.Script(), adapter.CollectIntervalSec(), h)
@@ -50,6 +53,7 @@ func (w *worker) Spans(adapter adapter.SpansAdapter, wg *sync.WaitGroup) {
 	h := &spansHandler{
 		handler: &handler{},
 		adapter: adapter,
+		resourceHelper: w.resourceHelper,
 		spans:   make([]*tracepb.ResourceSpans, 0),
 	}
 	w.run(w.ctx, wg, adapter.ID(), adapter.Script(), adapter.CollectIntervalSec(), h)

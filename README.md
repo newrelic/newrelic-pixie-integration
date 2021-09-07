@@ -42,12 +42,16 @@ HTTP_SPAN_COLLECT_INTERVAL_SEC=10
 JVM_COLLECT_INTERVAL_SEC=10
 MYSQL_COLLECT_INTERVAL_SEC=10
 POSTGRES_COLLECT_INTERVAL_SEC=10
+EXCLUDE_PODS=
+EXCLUDE_NAMESPACES=
 PIXIE_ENDPOINT=work.withpixie.ai:443
 NR_OTLP_HOST=otlp.nr-data.net:4317
 VERBOSE=true
 ```
 
 The `*_LIMIT` and `*_INTERVAL_SEC` environment variables can be used to control the amount of data that is sent to New Relic. The `COLLECT_INTERVAL_SEC` environment variable sets the collection interval for all PXL scripts. The other `*_INTERVAL_SEC` environment variables are overrides for the individual scripts. Setting the interval to `0` will disable sending that data to New Relic. The smallest valid interval is 2 seconds.
+
+The `EXCLUDE_PODS` and `EXCLUDE_NAMESPACES` environment variables can be configured with [RE2 regular expressions](https://github.com/google/re2/wiki/Syntax) to not send observability data to New Relic for the matching pods and namespaces. When `EXCLUDE_NAMESPACES` is provided, no data for the matching namespaces will be sent. When `EXCLUDE_PODS` is provided, no data for the matching pods (independent of the namespace they are in) will be sent.
 
 ## Testing
 
