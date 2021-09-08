@@ -51,12 +51,12 @@ func (a *pogsql) Script() string {
 	return a.script
 }
 
-func (a *pogsql) Adapt(r *types.Record) ([]*tracepb.ResourceSpans, error) {
+func (a *pogsql) Adapt(rh *ResourceHelper, r *types.Record) ([]*tracepb.ResourceSpans, error) {
 	spanID := idGenerator.NewSpanID()
 	traceID := idGenerator.NewTraceID()
 	timestamp := r.GetDatum("time_").(*types.Time64NSValue).Value()
 	duration := time.Duration(r.GetDatum("latency").(*types.Int64Value).Value())
-	resources := createResources(r, a.clusterName, a.pixieClusterID)
+	resources := rh.createResources(r, a.clusterName, a.pixieClusterID)
 	return createArrayOfSpans(resources, []*tracepb.InstrumentationLibrarySpans{
 		{
 			InstrumentationLibrary: instrumentationLibrary,

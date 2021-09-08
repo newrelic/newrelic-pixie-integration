@@ -5,6 +5,8 @@ import (
 	"regexp"
 	"strings"
 
+	"github.com/newrelic/infrastructure-agent/pkg/log"
+
 	metricpb "go.opentelemetry.io/proto/otlp/metrics/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 
@@ -21,6 +23,38 @@ const (
 )
 
 var regExpIsArray = regexp.MustCompilePOSIX(`\[((\"[a-zA-Z0-9\-\/._]+\")+,)*(\"[a-zA-Z0-9\-\/._]+\")\]`)
+
+type ResourceHelper struct {
+	excludePods       *regexp.Regexp
+	excludeNamespaces *regexp.Regexp
+}
+
+func NewResourceHelper(excludePods, excludeNamespaces string) (*ResourceHelper, error) {
+	var rExcludePods *regexp.Regexp
+	if excludePods != "" {
+		log.Infof("Excluding pods matching regex '%s'", excludePods)
+		var err error
+		rExcludePods, err = regexp.Compile(excludePods)
+		if err != nil {
+			return nil, fmt.Errorf("Parsing exclude pods regex failed: %v", err)
+		}
+	}
+
+	var rExcludeNamespaces *regexp.Regexp
+	if excludeNamespaces != "" {
+		log.Infof("Excluding namespaces matching regex '%s'", excludeNamespaces)
+		var err error
+		rExcludeNamespaces, err = regexp.Compile(excludeNamespaces)
+		if err != nil {
+			return nil, fmt.Errorf("Parsing exclude namespaces regex failed: %v", err)
+		}
+	}
+
+	return &ResourceHelper{
+		rExcludePods,
+		rExcludeNamespaces,
+	}, nil
+}
 
 func takeNamespaceServiceAndPod(r *types.Record) (ns string, services []string, pod string) {
 	ns = r.GetDatum(colNamespace).String()
@@ -85,9 +119,22 @@ func createResourceFunc(r *types.Record, namespace, pod, clusterName, pixieClust
 	}
 }
 
-func createResources(r *types.Record, clusterName, pixieClusterID string) []resourcepb.Resource {
+func (rh *ResourceHelper) createResources(r *types.Record, clusterName, pixieClusterID string) []resourcepb.Resource {
 	namespace, services, pod := takeNamespaceServiceAndPod(r)
+	if rh.shouldFilter(namespace, pod) {
+		return nil
+	}
 	return createResourceFunc(r, namespace, pod, clusterName, pixieClusterID)(services)
+}
+
+func (rh *ResourceHelper) shouldFilter(namespace, pod string) bool {
+	if rh.excludeNamespaces != nil && rh.excludeNamespaces.MatchString(namespace) {
+		return true
+	}
+	if rh.excludePods != nil && rh.excludePods.MatchString(pod) {
+		return true
+	}
+	return false
 }
 
 func createArrayOfSpans(resources []resourcepb.Resource, il []*tracepb.InstrumentationLibrarySpans) []*tracepb.ResourceSpans {

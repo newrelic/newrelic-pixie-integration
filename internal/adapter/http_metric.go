@@ -57,7 +57,7 @@ func (a *httpMetrics) Script() string {
 	return a.script
 }
 
-func (a *httpMetrics) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error) {
+func (a *httpMetrics) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.ResourceMetrics, error) {
 	timestamp := r.GetDatum("timestamp").(*types.Time64NSValue).Value()
 	statusCode := r.GetDatum("status_code").(*types.Int64Value).Value()
 	latMin := float64(r.GetDatum("latency_min").(*types.Int64Value).Value()) / 1000000
@@ -65,7 +65,7 @@ func (a *httpMetrics) Adapt(r *types.Record) ([]*metricpb.ResourceMetrics, error
 	latSum := float64(r.GetDatum("latency_sum").(*types.Int64Value).Value()) / 1000000
 	latCount := float64(r.GetDatum("latency_count").(*types.Int64Value).Value())
 
-	resources := createResources(r, a.clusterName, a.pixieClusterID)
+	resources := rh.createResources(r, a.clusterName, a.pixieClusterID)
 
 	return createArrayOfMetrics(resources, []*metricpb.InstrumentationLibraryMetrics{
 		{
