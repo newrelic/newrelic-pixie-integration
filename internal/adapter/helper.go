@@ -29,14 +29,14 @@ type ResourceHelper struct {
 	excludeNamespaces *regexp.Regexp
 }
 
-func NewResourceHelper(excludePods , excludeNamespaces string) (*ResourceHelper, error) {
+func NewResourceHelper(excludePods, excludeNamespaces string) (*ResourceHelper, error) {
 	var rExcludePods *regexp.Regexp
 	if excludePods != "" {
 		log.Infof("Excluding pods matching regex '%s'", excludePods)
 		var err error
 		rExcludePods, err = regexp.Compile(excludePods)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Parsing exclude pods regex failed: %v", err)
 		}
 	}
 
@@ -46,7 +46,7 @@ func NewResourceHelper(excludePods , excludeNamespaces string) (*ResourceHelper,
 		var err error
 		rExcludeNamespaces, err = regexp.Compile(excludeNamespaces)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("Parsing exclude namespaces regex failed: %v", err)
 		}
 	}
 
@@ -122,7 +122,7 @@ func createResourceFunc(r *types.Record, namespace, pod, clusterName, pixieClust
 func (rh *ResourceHelper) createResources(r *types.Record, clusterName, pixieClusterID string) []resourcepb.Resource {
 	namespace, services, pod := takeNamespaceServiceAndPod(r)
 	if rh.shouldFilter(namespace, pod) {
-		return []resourcepb.Resource{}
+		return nil
 	}
 	return createResourceFunc(r, namespace, pod, clusterName, pixieClusterID)(services)
 }
