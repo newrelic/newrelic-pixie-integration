@@ -75,9 +75,9 @@ func (a *httpMetrics) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.Re
 					Name:        "http.server.duration",
 					Description: "measures the duration of the inbound HTTP request",
 					Unit:        "ms",
-					Data: &metricpb.Metric_DoubleSummary{
-						DoubleSummary: &metricpb.DoubleSummary{
-							DataPoints: []*metricpb.DoubleSummaryDataPoint{
+					Data: &metricpb.Metric_Summary{
+						Summary: &metricpb.Summary{
+							DataPoints: []*metricpb.SummaryDataPoint{
 								{
 									Labels: []*commonpb.StringKeyValue{
 										{
@@ -89,7 +89,7 @@ func (a *httpMetrics) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.Re
 									TimeUnixNano:      uint64(timestamp.UnixNano() + (10 * time.Second).Nanoseconds()),
 									Count:             uint64(latCount),
 									Sum:               latSum,
-									QuantileValues: []*metricpb.DoubleSummaryDataPoint_ValueAtQuantile{
+									QuantileValues: []*metricpb.SummaryDataPoint_ValueAtQuantile{
 										{
 											Quantile: 0.0,
 											Value:    latMin,
