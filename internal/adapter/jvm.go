@@ -113,12 +113,12 @@ func (a *jvm) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.ResourceMe
 					Name:        def.metricName,
 					Description: def.description,
 					Unit:        def.unit,
-					Data: &metricpb.Metric_DoubleGauge{
-						DoubleGauge: &metricpb.DoubleGauge{
-							DataPoints: []*metricpb.DoubleDataPoint{
+					Data: &metricpb.Metric_Gauge{
+						Gauge: &metricpb.Gauge{
+							DataPoints: []*metricpb.NumberDataPoint{
 								{
 									TimeUnixNano: uint64(timestamp.UnixNano()),
-									Value:        value,
+									Value:        &metricpb.NumberDataPoint_AsDouble{value},
 									Labels:       transformAttributes(def.attributes),
 								},
 							},
