@@ -120,7 +120,7 @@ func setExporterConnection(ctx context.Context, cfg config.Exporter, tries int, 
 func setupPixie(ctx context.Context, cfg config.Pixie, tries int, sleepTime time.Duration) (vz *pxapi.VizierClient, err error) {
 	var client *pxapi.Client
 	for tries > 0 {
-		client, err = pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()), pxapi.WithCloudAddr(cfg.Host()))
+		client, err = pxapi.NewClient(ctx, pxapi.WithAPIKey(cfg.APIKey()), pxapi.WithCloudAddr(cfg.Host()), pxapi.WithE2EEncryption(true))
 		if err == nil {
 			vz, err = client.NewVizierClient(ctx, cfg.ClusterID())
 			if err == nil {
