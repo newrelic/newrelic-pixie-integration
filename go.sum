@@ -265,3 +265,5 @@ honnef.co/go/tools v0.0.0-20190102054323-c2f93a96b099/go.mod h1:rf3lG4BRIbNafJWh
 honnef.co/go/tools v0.0.0-20190523083050-ea95bdfd59fc/go.mod h1:rf3lG4BRIbNafJWhAfAdb/ePZxsR/4RtNHQocxwk9r4=
 px.dev/pxapi v0.2.0 h1:jT530z1ecA/WUFWGqmLEmZBiao9RaMzqgv/8Lfa/MpQ=
 px.dev/pxapi v0.2.0/go.mod h1:I6MU0yzBHBXTR5nGE24JfnFlAv1hQDHR3oqWm02vEnw=
+px.dev/pxapi v0.2.1 h1:GSFIsW+fjHFP3V3c5TcildiRy8iiNEOitv4ChcclxxM=
+px.dev/pxapi v0.2.1/go.mod h1:I6MU0yzBHBXTR5nGE24JfnFlAv1hQDHR3oqWm02vEnw=
