@@ -183,7 +183,7 @@ func getTraceID(r *types.Record, colName string) (TraceID, error) {
 		value = b3TraceIDPadding + value
 	}
 	if traceID, err = TraceIDFromHex(value); err != nil {
-		return traceID, err
+		return traceID, fmt.Errorf("error getting TraceID from Hex %s: %w", value, err)
 	}
 	return traceID, nil
 }
@@ -198,7 +198,7 @@ func getSpanID(r *types.Record, colName string) (SpanID, error) {
 		return idGenerator.NewSpanID(), nil
 	}
 	if spanID, err = SpanIDFromHex(value); err != nil {
-		return spanID, err
+		return spanID, fmt.Errorf("error getting SpanID from Hex %s: %w", value, err)
 	}
 	return spanID, nil
 }
