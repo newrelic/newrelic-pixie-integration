@@ -33,7 +33,7 @@ func setUpProxies() error {
 	_, err = proxyClient.CreateProxy(
 		"nr",
 		"0.0.0.0:6001",
-		"staging.otlp.nr-data.net:443",
+		"staging-otlp.nr-data.net:443",
 	)
 
 	return err
