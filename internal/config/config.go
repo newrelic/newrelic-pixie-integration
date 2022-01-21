@@ -31,8 +31,8 @@ const (
 	envExcludePods               = "EXCLUDE_PODS_REGEX"
 	envExcludeNamespaces         = "EXCLUDE_NAMESPACES_REGEX"
 	defPixieHostname             = "work.withpixie.ai:443"
-	endpointEU                   = "otlp.eu01.nr-data.net:4317"
-	endpointUSA                  = "otlp.nr-data.net:4317"
+	endpointEU                   = "otlp.eu01.nr-data.net:443"
+	endpointUSA                  = "otlp.nr-data.net:443"
 	boolTrue                     = "true"
 	defHttpSpanLimit             = 1500
 	defDbSpanLimit               = 500
