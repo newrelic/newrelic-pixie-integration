@@ -119,7 +119,7 @@ func (a *jvm) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.ResourceMe
 								{
 									TimeUnixNano: uint64(timestamp.UnixNano()),
 									Value:        &metricpb.NumberDataPoint_AsDouble{value},
-									Labels:       transformAttributes(def.attributes),
+									Attributes:   transformAttributes(def.attributes),
 								},
 							},
 						},
@@ -145,13 +145,15 @@ func getValueFromJVMMetric(r *types.Record, metricName string) (float64, error) 
 	return value, nil
 }
 
-func transformAttributes(attrs map[string]interface{}) []*commonpb.StringKeyValue {
-	stringKeyValues := make([]*commonpb.StringKeyValue, 0)
+func transformAttributes(attrs map[string]interface{}) []*commonpb.KeyValue {
+	keyValues := make([]*commonpb.KeyValue, 0)
 	for k := range attrs {
-		stringKeyValues = append(stringKeyValues, &commonpb.StringKeyValue{
-			Key:   k,
-			Value: fmt.Sprintf("%v", attrs[k]),
+		keyValues = append(keyValues, &commonpb.KeyValue{
+			Key: k,
+			Value: &commonpb.AnyValue{
+				Value: &commonpb.AnyValue_StringValue{fmt.Sprintf("%v", attrs[k])},
+			},
 		})
 	}
-	return stringKeyValues
+	return keyValues
 }

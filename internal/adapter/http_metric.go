@@ -2,7 +2,6 @@ package adapter
 
 import (
 	"fmt"
-	"strconv"
 	"time"
 
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
@@ -79,10 +78,12 @@ func (a *httpMetrics) Adapt(rh *ResourceHelper, r *types.Record) ([]*metricpb.Re
 						Summary: &metricpb.Summary{
 							DataPoints: []*metricpb.SummaryDataPoint{
 								{
-									Labels: []*commonpb.StringKeyValue{
+									Attributes: []*commonpb.KeyValue{
 										{
-											Key:   "http.status_code",
-											Value: strconv.Itoa(int(statusCode)),
+											Key: "http.status_code",
+											Value: &commonpb.AnyValue{
+												Value: &commonpb.AnyValue_IntValue{statusCode},
+											},
 										},
 									},
 									StartTimeUnixNano: uint64(timestamp.UnixNano()),
