@@ -3,13 +3,12 @@ package config
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"strconv"
 	"strings"
 	"sync"
 
-	"github.com/newrelic/infrastructure-agent/pkg/license"
-	"github.com/newrelic/infrastructure-agent/pkg/log"
-	"github.com/sirupsen/logrus"
+	log "github.com/sirupsen/logrus"
 )
 
 const (
@@ -19,6 +18,7 @@ const (
 	envPixieClusterID            = "PIXIE_CLUSTER_ID"
 	envPixieEndpoint             = "PIXIE_ENDPOINT"
 	envPixieAPIKey               = "PIXIE_API_KEY"
+	envScriptDir                 = "SCRIPT_DIR"
 	envClusterName               = "CLUSTER_NAME"
 	envHttpSpanLimit             = "HTTP_SPAN_LIMIT"
 	envDbSpanLimit               = "DB_SPAN_LIMIT"
@@ -30,6 +30,7 @@ const (
 	envPostgresCollectInterval   = "POSTGRES_COLLECT_INTERVAL_SEC"
 	envExcludePods               = "EXCLUDE_PODS_REGEX"
 	envExcludeNamespaces         = "EXCLUDE_NAMESPACES_REGEX"
+	defScriptDir                 = "/scripts"
 	defPixieHostname             = "work.withpixie.ai:443"
 	endpointEU                   = "otlp.eu01.nr-data.net:443"
 	endpointUSA                  = "otlp.nr-data.net:443"
@@ -39,6 +40,9 @@ const (
 	defCollectInterval           = 10
 )
 
+var (
+	regionLicenseRegex = regexp.MustCompile(`^([a-z]{2,3})`)
+)
 var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""
@@ -56,14 +60,15 @@ func GetConfig() (Config, error) {
 }
 
 func setUpConfig() error {
-	log.SetLevel(logrus.InfoLevel)
+	log.SetLevel(log.InfoLevel)
 	if strings.EqualFold(os.Getenv(envVerbose), boolTrue) {
-		log.SetLevel(logrus.DebugLevel)
+		log.SetLevel(log.DebugLevel)
 	}
 	nrHostname := os.Getenv(envNROTLPHost)
 	nrLicenseKey := os.Getenv(envNRLicenseKEy)
 	pixieClusterID := os.Getenv(envPixieClusterID)
 	pixieAPIKey := os.Getenv(envPixieAPIKey)
+	scriptDir := getEnvWithDefault(envScriptDir, defScriptDir)
 	clusterName := os.Getenv(envClusterName)
 	pixieHost := getEnvWithDefault(envPixieEndpoint, defPixieHostname)
 	excludePods := os.Getenv(envExcludePods)
@@ -114,10 +119,12 @@ func setUpConfig() error {
 			version:   integrationVersion,
 		},
 		worker: &worker{
+			scriptDir:                 scriptDir,
 			clusterName:               clusterName,
 			pixieClusterID:            pixieClusterID,
 			httpSpanLimit:             httpSpanLimit,
 			dbSpanLimit:               dbSpanLimit,
+			collectInterval:           collectInterval,
 			httpMetricCollectInterval: httpMetricCollectInterval,
 			httpSpanCollectInterval:   httpSpanCollectInterval,
 			jvmCollectInterval:        jvmCollectInterval,
@@ -299,25 +306,29 @@ func (p *pixie) Host() string {
 }
 
 type Worker interface {
-	ClusterName()               string
-	PixieClusterID()            string
-	HttpSpanLimit()             int64
-	DbSpanLimit()               int64
+	ScriptDir() string
+	ClusterName() string
+	PixieClusterID() string
+	HttpSpanLimit() int64
+	DbSpanLimit() int64
+	CollectInterval() int64
 	HttpMetricCollectInterval() int64
-	HttpSpanCollectInterval()   int64
-	JvmCollectInterval()        int64
-	MysqlCollectInterval()      int64
-	PostgresCollectInterval()   int64
-	ExcludePods()               string
-	ExcludeNamespaces()         string
-	validate()                  error
+	HttpSpanCollectInterval() int64
+	JvmCollectInterval() int64
+	MysqlCollectInterval() int64
+	PostgresCollectInterval() int64
+	ExcludePods() string
+	ExcludeNamespaces() string
+	validate() error
 }
 
 type worker struct {
+	scriptDir                 string
 	clusterName               string
 	pixieClusterID            string
 	httpSpanLimit             int64
 	dbSpanLimit               int64
+	collectInterval           int64
 	httpMetricCollectInterval int64
 	httpSpanCollectInterval   int64
 	jvmCollectInterval        int64
@@ -334,6 +345,10 @@ func (a *worker) validate() error {
 	return nil
 }
 
+func (a *worker) ScriptDir() string {
+	return a.scriptDir
+}
+
 func (a *worker) ClusterName() string {
 	return a.clusterName
 }
@@ -348,6 +363,10 @@ func (a *worker) HttpSpanLimit() int64 {
 
 func (a *worker) DbSpanLimit() int64 {
 	return a.dbSpanLimit
+}
+
+func (a *worker) CollectInterval() int64 {
+	return a.collectInterval
 }
 
 func (a *worker) HttpMetricCollectInterval() int64 {
@@ -380,14 +399,22 @@ func (a *worker) ExcludeNamespaces() string {
 
 func getEndpoint(hostname, licenseKey string) (string, error) {
 	if hostname != "" {
-		log.Debugf("spans & metrics will be sent to endpoint %s", hostname)
+		log.Debugf("New Relic endpoint is set to %s", hostname)
 		return hostname, nil
 	}
 	endpoint := endpointUSA
-	nrRegion := license.GetRegion(licenseKey)
+	nrRegion := getRegion(licenseKey)
 	if strings.ToLower(nrRegion) == "eu" {
 		endpoint = endpointEU
 	}
-	log.Debugf("spans & metrics will be sent to endpoint %s", endpoint)
+	log.Debugf("New Relic endpoint is set to %s", endpoint)
 	return endpoint, nil
+}
+
+func getRegion(licenseKey string) string {
+	matches := regionLicenseRegex.FindStringSubmatch(licenseKey)
+	if len(matches) > 1 {
+		return matches[1]
+	}
+	return ""
 }
