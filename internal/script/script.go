@@ -125,16 +125,16 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 
 func getFilterLines(scriptName string, config ScriptConfig) []string {
 	lines := []string{"# New Relic integration filtering"}
-	if scriptName == "http_spans" && config.HttpSpanLimit > 0 {
-		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.HttpSpanLimit))
-	} else if (scriptName == "postgres" || scriptName == "mysql") && config.DbSpanLimit > 0 {
-		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.DbSpanLimit))
-	}
 	if config.ExcludeNamespaces != "" {
 		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.namespace)\n]", config.ExcludeNamespaces))
 	}
 	if config.ExcludePods != "" {
 		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.pod)\n]", config.ExcludePods))
+	}
+	if scriptName == "http_spans" && config.HttpSpanLimit > 0 {
+		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.HttpSpanLimit))
+	} else if (scriptName == "postgres" || scriptName == "mysql") && config.DbSpanLimit > 0 {
+		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.DbSpanLimit))
 	}
 	return append(lines, "")
 }
