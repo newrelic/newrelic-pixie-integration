@@ -110,9 +110,6 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 
 func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
-	if !definition.IsPreset && !definition.AddExcludes {
-		return withClusterName
-	}
 	lines := strings.Split(withClusterName, "\n")
 	exportLineNumber := 0
 	for i, line := range lines {
@@ -123,23 +120,35 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	}
 	var finalLines []string
 	finalLines = append(finalLines, lines[:exportLineNumber]...)
-	finalLines = append(finalLines, getFilterLines(definition.Name, config)...)
+	if definition.IsPreset || definition.AddExcludes {
+		finalLines = append(finalLines, "# New Relic integration filtering")
+		finalLines = append(finalLines, getExcludeLines(config)...)
+		if definition.IsPreset {
+			finalLines = append(finalLines, getLimitLines(definition.Name, config)...)
+		}
+		finalLines = append(finalLines, "")
+	}
 	finalLines = append(finalLines, lines[exportLineNumber:]...)
 	return strings.Join(finalLines, "\n")
 }
 
-func getFilterLines(scriptName string, config ScriptConfig) []string {
-	lines := []string{"# New Relic integration filtering"}
+func getExcludeLines(config ScriptConfig) []string {
+	var lines []string
 	if config.ExcludeNamespaces != "" {
-		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.namespace)]", config.ExcludeNamespaces))
+		lines = append(lines, fmt.Sprintf("df = df[not px.regex_match('%s', df.namespace)]", config.ExcludeNamespaces))
 	}
 	if config.ExcludePods != "" {
-		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.pod)]", config.ExcludePods))
+		lines = append(lines, fmt.Sprintf("df = df[not px.regex_match('%s', df.pod)]", config.ExcludePods))
 	}
+	return lines
+}
+
+func getLimitLines(scriptName string, config ScriptConfig) []string {
+	var lines []string
 	if scriptName == httpSpansScript && config.HttpSpanLimit > 0 {
 		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.HttpSpanLimit))
 	} else if (scriptName == postgresqlSpansScript || scriptName == mysqlSpansScript) && config.DbSpanLimit > 0 {
 		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.DbSpanLimit))
 	}
-	return append(lines, "")
+	return lines
 }

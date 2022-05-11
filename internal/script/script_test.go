@@ -89,7 +89,7 @@ func TestTemplateScript(t *testing.T) {
 		}))
 
 	assert.Equal(t,
-		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[!px.regex_match('.*mypod.*', df.pod)]", ""),
+		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('.*mypod.*', df.pod)]", ""),
 		templateScript(&ScriptDefinition{
 			Name:        "Http Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
@@ -107,7 +107,7 @@ func TestTemplateScript(t *testing.T) {
 		}))
 
 	assert.Equal(t,
-		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[!px.regex_match('.*mynamespace.*', df.namespace)]", "df = df[!px.regex_match('.*mypod.*', df.pod)]", ""),
+		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('.*mynamespace.*', df.namespace)]", "df = df[not px.regex_match('.*mypod.*', df.pod)]", ""),
 		templateScript(&ScriptDefinition{
 			Name:        "HTTP Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
@@ -125,7 +125,7 @@ func TestTemplateScript(t *testing.T) {
 		}))
 
 	assert.Equal(t,
-		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[!px.regex_match('.*mynamespace.*', df.namespace)]", "df = df[!px.regex_match('.*mypod.*', df.pod)]", "df = df.head(100)", ""),
+		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('.*mynamespace.*', df.namespace)]", "df = df[not px.regex_match('.*mypod.*', df.pod)]", "df = df.head(100)", ""),
 		templateScript(&ScriptDefinition{
 			Name:        "HTTP Spans",
 			Description: "This script sends HTTP spans to New Relic's OTel endpoint.",
@@ -143,7 +143,7 @@ func TestTemplateScript(t *testing.T) {
 		}))
 
 	assert.Equal(t,
-		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[!px.regex_match('.*mynamespace.*', df.namespace)]", "df = df.head(200)", ""),
+		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('.*mynamespace.*', df.namespace)]", "df = df.head(200)", ""),
 		templateScript(&ScriptDefinition{
 			Name:        "MySQL Spans",
 			Description: "This script sends MySQL spans to New Relic's OTel endpoint.",

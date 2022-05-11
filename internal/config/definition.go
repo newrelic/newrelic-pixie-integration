@@ -6,7 +6,10 @@ import (
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"strings"
 )
+
+const scriptExtension = ".yaml"
 
 func ReadScriptDefinitions(dir string) ([]*script.ScriptDefinition, error) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
@@ -18,11 +21,13 @@ func ReadScriptDefinitions(dir string) ([]*script.ScriptDefinition, error) {
 	}
 	var l []*script.ScriptDefinition
 	for _, file := range files {
-		description, err := readScriptDefinition(filepath.Join(dir, file.Name()))
-		if err != nil {
-			return nil, err
+		if strings.HasSuffix(file.Name(), scriptExtension) {
+			description, err := readScriptDefinition(filepath.Join(dir, file.Name()))
+			if err != nil {
+				return nil, err
+			}
+			l = append(l, description)
 		}
-		l = append(l, description)
 	}
 	return l, nil
 }

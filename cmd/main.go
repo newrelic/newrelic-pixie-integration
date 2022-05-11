@@ -27,7 +27,9 @@ func main() {
 		os.Exit(1)
 	}
 
-	log.Debugf("Setting up Pixie plugin for cluster-id %s", cfg.Pixie().ClusterID())
+	clusterId := cfg.Pixie().ClusterID()
+
+	log.Debugf("Setting up Pixie plugin for cluster-id %s", clusterId)
 	client, err := setupPixie(ctx, cfg.Pixie(), defaultRetries, defaultSleepTime)
 	if err != nil {
 		log.WithError(err).Fatal("setting up Pixie client failed")
@@ -78,14 +80,14 @@ func main() {
 	definitions := append(defsFromPixie, defsFromDisk...)
 
 	log.Debugf("Getting current scripts for cluster")
-	currentScripts, err := client.GetClusterScripts(cfg.Pixie().ClusterID())
+	currentScripts, err := client.GetClusterScripts(clusterId)
 	if err != nil {
 		log.WithError(err).Fatal("failed to get data retention scripts")
 	}
 
 	actions := script.GetActions(definitions, currentScripts, script.ScriptConfig{
 		ClusterName:               cfg.Worker().ClusterName(),
-		ClusterId:                 cfg.Pixie().ClusterID(),
+		ClusterId:                 clusterId,
 		HttpSpanLimit:             cfg.Worker().HttpSpanLimit(),
 		DbSpanLimit:               cfg.Worker().DbSpanLimit(),
 		CollectInterval:           cfg.Worker().CollectInterval(),
@@ -110,7 +112,7 @@ func main() {
 
 	for _, s := range actions.ToUpdate {
 		log.Debugf("Updating script %s", s.Name)
-		err := client.UpdateDataRetentionScript(s.ScriptId, s.Name, s.Description, s.FrequencyS, s.Script)
+		err := client.UpdateDataRetentionScript(clusterId, s.ScriptId, s.Name, s.Description, s.FrequencyS, s.Script)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -118,7 +120,7 @@ func main() {
 
 	for _, s := range actions.ToCreate {
 		log.Debugf("Creating script %s", s.Name)
-		err := client.AddDataRetentionScript(cfg.Pixie().ClusterID(), s.Name, s.Description, s.FrequencyS, s.Script)
+		err := client.AddDataRetentionScript(clusterId, s.Name, s.Description, s.FrequencyS, s.Script)
 		if err != nil {
 			errs = append(errs, err)
 		}

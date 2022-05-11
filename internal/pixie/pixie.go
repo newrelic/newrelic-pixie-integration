@@ -192,7 +192,7 @@ func (c *Client) AddDataRetentionScript(clusterId string, scriptName string, des
 	return err
 }
 
-func (c *Client) UpdateDataRetentionScript(scriptId string, scriptName string, description string, frequencyS int64, contents string) error {
+func (c *Client) UpdateDataRetentionScript(clusterId string, scriptId string, scriptName string, description string, frequencyS int64, contents string) error {
 	req := &cloudpb.UpdateRetentionScriptRequest{
 		ID:          utils.ProtoFromUUIDStrOrNil(scriptId),
 		ScriptName:  &types.StringValue{Value: scriptName},
@@ -200,6 +200,7 @@ func (c *Client) UpdateDataRetentionScript(scriptId string, scriptName string, d
 		Enabled:     &types.BoolValue{Value: true},
 		FrequencyS:  &types.Int64Value{Value: frequencyS},
 		Contents:    &types.StringValue{Value: contents},
+		ClusterIDs:  []*uuidpb.UUID{utils.ProtoFromUUIDStrOrNil(clusterId)},
 	}
 	_, err := c.pluginClient.UpdateRetentionScript(c.ctx, req)
 	return err
