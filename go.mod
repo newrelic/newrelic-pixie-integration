@@ -11,6 +11,7 @@ require (
 	github.com/lestrrat-go/jwx v1.2.24 // indirect
 	github.com/newrelic/infrastructure-agent v0.0.0-20210422145429-ffccdd3cde2b
 	github.com/sirupsen/logrus v1.8.1
+	github.com/stretchr/testify v1.7.1 // indirect
 	go.opentelemetry.io/proto/otlp v0.9.0
 	golang.org/x/crypto v0.0.0-20220507011949-2cf3adece122 // indirect
 	golang.org/x/lint v0.0.0-20201208152925-83fdc39ff7b5 // indirect

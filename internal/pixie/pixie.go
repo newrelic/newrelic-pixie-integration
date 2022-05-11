@@ -159,7 +159,6 @@ func (c *Client) GetClusterScripts(clusterId string) ([]*script.Script, error) {
 			l = append(l, &script.Script{
 				ScriptDefinition: *sd,
 				ScriptId:         utils.ProtoToUUIDStr(s.ScriptID),
-				ClusterId:        clusterId,
 			})
 		}
 	}

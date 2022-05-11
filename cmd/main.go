@@ -118,7 +118,7 @@ func main() {
 
 	for _, s := range actions.ToCreate {
 		log.Debugf("Creating script %s", s.Name)
-		err := client.AddDataRetentionScript(s.ClusterId, s.Name, s.Description, s.FrequencyS, s.Script)
+		err := client.AddDataRetentionScript(cfg.Pixie().ClusterID(), s.Name, s.Description, s.FrequencyS, s.Script)
 		if err != nil {
 			errs = append(errs, err)
 		}

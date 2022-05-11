@@ -6,7 +6,12 @@ import (
 )
 
 const (
-	scriptPrefix = "nri-"
+	scriptPrefix          = "nri-"
+	httpMetricsScript     = "HTTP Metrics"
+	httpSpansScript       = "HTTP Spans"
+	jvmMetricsScript      = "JVM Metrics"
+	mysqlSpansScript      = "MySQL Spans"
+	postgresqlSpansScript = "PostgreSQL Spans"
 )
 
 type ScriptConfig struct {
@@ -26,8 +31,7 @@ type ScriptConfig struct {
 
 type Script struct {
 	ScriptDefinition
-	ScriptId  string
-	ClusterId string
+	ScriptId string
 }
 
 type ScriptDefinition struct {
@@ -67,7 +71,6 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 				actions.ToUpdate = append(actions.ToUpdate, &Script{
 					ScriptDefinition: definition,
 					ScriptId:         current.ScriptId,
-					ClusterId:        config.ClusterId,
 				})
 			}
 			delete(definitions, current.Name)
@@ -89,15 +92,15 @@ func getScriptName(scriptName string, clusterName string) string {
 
 func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 	if definition.IsPreset || definition.FrequencyS <= 0 {
-		if definition.Name == "http_metrics" {
+		if definition.Name == httpMetricsScript {
 			return config.HttpMetricCollectInterval
-		} else if definition.Name == "http_spans" {
+		} else if definition.Name == httpSpansScript {
 			return config.HttpSpanCollectInterval
-		} else if definition.Name == "jvm_metrics" {
+		} else if definition.Name == jvmMetricsScript {
 			return config.JvmCollectInterval
-		} else if definition.Name == "postgres" {
+		} else if definition.Name == postgresqlSpansScript {
 			return config.PostgresCollectInterval
-		} else if definition.Name == "mysql" {
+		} else if definition.Name == mysqlSpansScript {
 			return config.MysqlCollectInterval
 		}
 		return config.CollectInterval
@@ -106,7 +109,7 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 }
 
 func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
-	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", config.ClusterName, -1)
+	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
 	if !definition.IsPreset && !definition.AddExcludes {
 		return withClusterName
 	}
@@ -118,22 +121,24 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 			break
 		}
 	}
-	finalLines := append(lines[:exportLineNumber], getFilterLines(definition.Name, config)...)
+	var finalLines []string
+	finalLines = append(finalLines, lines[:exportLineNumber]...)
+	finalLines = append(finalLines, getFilterLines(definition.Name, config)...)
 	finalLines = append(finalLines, lines[exportLineNumber:]...)
-	return strings.Join(lines, "\n")
+	return strings.Join(finalLines, "\n")
 }
 
 func getFilterLines(scriptName string, config ScriptConfig) []string {
 	lines := []string{"# New Relic integration filtering"}
 	if config.ExcludeNamespaces != "" {
-		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.namespace)\n]", config.ExcludeNamespaces))
+		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.namespace)]", config.ExcludeNamespaces))
 	}
 	if config.ExcludePods != "" {
-		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.pod)\n]", config.ExcludePods))
+		lines = append(lines, fmt.Sprintf("df = df[!px.regex_match('%s', df.pod)]", config.ExcludePods))
 	}
-	if scriptName == "http_spans" && config.HttpSpanLimit > 0 {
+	if scriptName == httpSpansScript && config.HttpSpanLimit > 0 {
 		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.HttpSpanLimit))
-	} else if (scriptName == "postgres" || scriptName == "mysql") && config.DbSpanLimit > 0 {
+	} else if (scriptName == postgresqlSpansScript || scriptName == mysqlSpansScript) && config.DbSpanLimit > 0 {
 		lines = append(lines, fmt.Sprintf("df = df.head(%v)", config.DbSpanLimit))
 	}
 	return append(lines, "")
