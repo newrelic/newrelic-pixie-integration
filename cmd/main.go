@@ -28,6 +28,7 @@ func main() {
 	}
 
 	clusterId := cfg.Pixie().ClusterID()
+	clusterName := cfg.Worker().ClusterName()
 
 	log.Debugf("Setting up Pixie plugin for cluster-id %s", clusterId)
 	client, err := setupPixie(ctx, cfg.Pixie(), defaultRetries, defaultSleepTime)
@@ -80,13 +81,13 @@ func main() {
 	definitions := append(defsFromPixie, defsFromDisk...)
 
 	log.Debugf("Getting current scripts for cluster")
-	currentScripts, err := client.GetClusterScripts(clusterId)
+	currentScripts, err := client.GetClusterScripts(clusterId, clusterName)
 	if err != nil {
 		log.WithError(err).Fatal("failed to get data retention scripts")
 	}
 
 	actions := script.GetActions(definitions, currentScripts, script.ScriptConfig{
-		ClusterName:               cfg.Worker().ClusterName(),
+		ClusterName:               clusterName,
 		ClusterId:                 clusterId,
 		HttpSpanLimit:             cfg.Worker().HttpSpanLimit(),
 		DbSpanLimit:               cfg.Worker().DbSpanLimit(),

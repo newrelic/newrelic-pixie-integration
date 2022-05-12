@@ -11,6 +11,8 @@ import (
 
 const scriptExtension = ".yaml"
 
+// ReadScriptDefinitions reads the script definition from the given directory path.
+// Only .yaml files are read and subdirectories are not traversed.
 func ReadScriptDefinitions(dir string) ([]*script.ScriptDefinition, error) {
 	if _, err := os.Stat(dir); os.IsNotExist(err) {
 		return nil, nil

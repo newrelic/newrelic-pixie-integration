@@ -144,14 +144,15 @@ func (c *Client) GetPresetScripts() ([]*script.ScriptDefinition, error) {
 	return l, nil
 }
 
-func (c *Client) GetClusterScripts(clusterId string) ([]*script.Script, error) {
+func (c *Client) GetClusterScripts(clusterId, clusterName string) ([]*script.Script, error) {
 	resp, err := c.pluginClient.GetRetentionScripts(c.ctx, &cloudpb.GetRetentionScriptsRequest{})
 	if err != nil {
 		return nil, err
 	}
 	var l []*script.Script
 	for _, s := range resp.Scripts {
-		if script.IsNewRelicScript(s.ScriptName) && len(s.ClusterIDs) == 1 && utils.ProtoToUUIDStr(s.ClusterIDs[0]) == clusterId {
+		if script.IsNewRelicScript(s.ScriptName) && (script.IsScriptForCluster(s.ScriptName, clusterName) ||
+			(len(s.ClusterIDs) == 1 && utils.ProtoToUUIDStr(s.ClusterIDs[0]) == clusterId)) {
 			sd, err := c.getScriptDefinition(s)
 			if err != nil {
 				return nil, err
@@ -159,10 +160,22 @@ func (c *Client) GetClusterScripts(clusterId string) ([]*script.Script, error) {
 			l = append(l, &script.Script{
 				ScriptDefinition: *sd,
 				ScriptId:         utils.ProtoToUUIDStr(s.ScriptID),
+				ClusterIds:       getClusterIdsAsString(s.ClusterIDs),
 			})
 		}
 	}
 	return l, nil
+}
+
+func getClusterIdsAsString(clusterIDs []*uuidpb.UUID) string {
+	scriptClusterId := ""
+	for i, id := range clusterIDs {
+		if i > 0 {
+			scriptClusterId = scriptClusterId + ","
+		}
+		scriptClusterId = scriptClusterId + utils.ProtoToUUIDStr(id)
+	}
+	return scriptClusterId
 }
 
 func (c *Client) getScriptDefinition(s *cloudpb.RetentionScript) (*script.ScriptDefinition, error) {
@@ -175,7 +188,7 @@ func (c *Client) getScriptDefinition(s *cloudpb.RetentionScript) (*script.Script
 		Description: s.Description,
 		FrequencyS:  s.FrequencyS,
 		Script:      resp.Contents,
-		IsPreset:    true,
+		IsPreset:    s.IsPreset,
 	}, nil
 }
 

@@ -69,6 +69,11 @@ func TestIsNewRelicScript(t *testing.T) {
 	assert.False(t, IsNewRelicScript("not-nri-script"))
 }
 
+func TestIsScriptForCluster(t *testing.T) {
+	assert.True(t, IsScriptForCluster("nri-HTPT Metrics-test-cluster", "test-cluster"))
+	assert.False(t, IsScriptForCluster("nri-HTPT Metrics-test-cluster", "new-cluster"))
+}
+
 func TestTemplateScript(t *testing.T) {
 	assert.Equal(t,
 		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),

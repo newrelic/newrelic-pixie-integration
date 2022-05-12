@@ -31,7 +31,8 @@ type ScriptConfig struct {
 
 type Script struct {
 	ScriptDefinition
-	ScriptId string
+	ScriptId   string
+	ClusterIds string
 }
 
 type ScriptDefinition struct {
@@ -53,21 +54,28 @@ func IsNewRelicScript(scriptName string) bool {
 	return strings.HasPrefix(scriptName, scriptPrefix)
 }
 
+func IsScriptForCluster(scriptName, clusterName string) bool {
+	return IsNewRelicScript(scriptName) && strings.HasSuffix(scriptName, "-"+clusterName)
+}
+
 func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script, config ScriptConfig) ScriptActions {
 	definitions := make(map[string]ScriptDefinition)
 	for _, definition := range scriptDefinitions {
 		scriptName := getScriptName(definition.Name, config.ClusterName)
-		definitions[scriptName] = ScriptDefinition{
-			Name:        scriptName,
-			Description: definition.Description,
-			FrequencyS:  getInterval(definition, config),
-			Script:      templateScript(definition, config),
+		frequencyS := getInterval(definition, config)
+		if frequencyS > 0 {
+			definitions[scriptName] = ScriptDefinition{
+				Name:        scriptName,
+				Description: definition.Description,
+				FrequencyS:  frequencyS,
+				Script:      templateScript(definition, config),
+			}
 		}
 	}
 	actions := ScriptActions{}
 	for _, current := range currentScripts {
 		if definition, present := definitions[current.Name]; present {
-			if definition.Script != current.Script || definition.FrequencyS != current.FrequencyS {
+			if definition.Script != current.Script || definition.FrequencyS != current.FrequencyS || config.ClusterId != current.ClusterIds {
 				actions.ToUpdate = append(actions.ToUpdate, &Script{
 					ScriptDefinition: definition,
 					ScriptId:         current.ScriptId,
@@ -91,7 +99,7 @@ func getScriptName(scriptName string, clusterName string) string {
 }
 
 func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
-	if definition.IsPreset || definition.FrequencyS <= 0 {
+	if definition.IsPreset {
 		if definition.Name == httpMetricsScript {
 			return config.HttpMetricCollectInterval
 		} else if definition.Name == httpSpansScript {
@@ -103,6 +111,9 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 		} else if definition.Name == mysqlSpansScript {
 			return config.MysqlCollectInterval
 		}
+		return config.CollectInterval
+	}
+	if definition.FrequencyS == 0 {
 		return config.CollectInterval
 	}
 	return definition.FrequencyS
