@@ -108,7 +108,7 @@ func setUpConfig() error {
 		return err
 	}
 
-	nrHostname, err = getEndpoint(nrHostname, nrLicenseKey)
+	nrHostname = getEndpoint(nrHostname, nrLicenseKey)
 	if err != nil {
 		return fmt.Errorf("error getting endpoint for license: %w", err)
 	}
@@ -397,10 +397,10 @@ func (a *worker) ExcludeNamespaces() string {
 	return a.excludeNamespaces
 }
 
-func getEndpoint(hostname, licenseKey string) (string, error) {
+func getEndpoint(hostname, licenseKey string) string {
 	if hostname != "" {
 		log.Debugf("New Relic endpoint is set to %s", hostname)
-		return hostname, nil
+		return hostname
 	}
 	endpoint := endpointUSA
 	nrRegion := getRegion(licenseKey)
@@ -408,7 +408,7 @@ func getEndpoint(hostname, licenseKey string) (string, error) {
 		endpoint = endpointEU
 	}
 	log.Debugf("New Relic endpoint is set to %s", endpoint)
-	return endpoint, nil
+	return endpoint
 }
 
 func getRegion(licenseKey string) string {

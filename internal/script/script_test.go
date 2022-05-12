@@ -74,6 +74,104 @@ func TestIsScriptForCluster(t *testing.T) {
 	assert.False(t, IsScriptForCluster("nri-HTPT Metrics-test-cluster", "new-cluster"))
 }
 
+func TestGetScriptName(t *testing.T) {
+	assert.Equal(t, "nri-HTTP Metrics-test-cluster", getScriptName("HTTP Metrics", "test-cluster"))
+}
+func TestGetIntervalCustomScript(t *testing.T) {
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "custom script",
+		FrequencyS: 0,
+		IsPreset:   false,
+	}, ScriptConfig{
+		CollectInterval: 10,
+	}))
+	assert.Equal(t, int64(-1), getInterval(&ScriptDefinition{
+		Name:       "custom script",
+		FrequencyS: -1,
+		IsPreset:   false,
+	}, ScriptConfig{
+		CollectInterval: 10,
+	}))
+	assert.Equal(t, int64(20), getInterval(&ScriptDefinition{
+		Name:       "custom script",
+		FrequencyS: 20,
+		IsPreset:   false,
+	}, ScriptConfig{
+		CollectInterval: 10,
+	}))
+}
+
+func TestGetIntervalPresetScript(t *testing.T) {
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "HTTP Metrics",
+		FrequencyS: 0,
+		IsPreset:   true,
+	}, ScriptConfig{
+		HttpMetricCollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "HTTP Metrics",
+		FrequencyS: 20,
+		IsPreset:   true,
+	}, ScriptConfig{
+		HttpMetricCollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "HTTP Metrics",
+		FrequencyS: -1,
+		IsPreset:   true,
+	}, ScriptConfig{
+		HttpMetricCollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "HTTP Metrics",
+		FrequencyS: 100,
+		IsPreset:   true,
+	}, ScriptConfig{
+		HttpMetricCollectInterval: 0,
+		CollectInterval:           10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "New Preset",
+		FrequencyS: 100,
+		IsPreset:   true,
+	}, ScriptConfig{
+		CollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "HTTP Spans",
+		FrequencyS: 0,
+		IsPreset:   true,
+	}, ScriptConfig{
+		HttpSpanCollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "JVM Metrics",
+		FrequencyS: 0,
+		IsPreset:   true,
+	}, ScriptConfig{
+		JvmCollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "MySQL Spans",
+		FrequencyS: 0,
+		IsPreset:   true,
+	}, ScriptConfig{
+		MysqlCollectInterval: 10,
+	}))
+	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+		Name:       "PostgreSQL Spans",
+		FrequencyS: 0,
+		IsPreset:   true,
+	}, ScriptConfig{
+		PostgresCollectInterval: 10,
+	}))
+}
+
+func TestGetActions(t *testing.T) {
+	// TODO Write GetAction tests here.
+}
+
 func TestTemplateScript(t *testing.T) {
 	assert.Equal(t,
 		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
@@ -161,6 +259,38 @@ func TestTemplateScript(t *testing.T) {
 			ClusterId:         "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 			HttpSpanLimit:     0,
 			DbSpanLimit:       200,
+			ExcludePods:       "",
+			ExcludeNamespaces: ".*mynamespace.*",
+		}))
+
+	assert.Equal(t,
+		getTemplatedScript("test-cluster", ""),
+		templateScript(&ScriptDefinition{
+			Name:        "My script",
+			Description: "This is my script.",
+			FrequencyS:  10,
+			Script:      testScript,
+			AddExcludes: false,
+			IsPreset:    false,
+		}, ScriptConfig{
+			ClusterName:       "test-cluster",
+			ClusterId:         "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ExcludePods:       "",
+			ExcludeNamespaces: ".*mynamespace.*",
+		}))
+
+	assert.Equal(t,
+		getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('.*mynamespace.*', df.namespace)]", ""),
+		templateScript(&ScriptDefinition{
+			Name:        "My script",
+			Description: "This is my script.",
+			FrequencyS:  10,
+			Script:      testScript,
+			AddExcludes: true,
+			IsPreset:    false,
+		}, ScriptConfig{
+			ClusterName:       "test-cluster",
+			ClusterId:         "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 			ExcludePods:       "",
 			ExcludeNamespaces: ".*mynamespace.*",
 		}))

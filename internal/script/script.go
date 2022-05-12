@@ -100,18 +100,22 @@ func getScriptName(scriptName string, clusterName string) string {
 
 func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 	if definition.IsPreset {
+		var interval int64
 		if definition.Name == httpMetricsScript {
-			return config.HttpMetricCollectInterval
+			interval = config.HttpMetricCollectInterval
 		} else if definition.Name == httpSpansScript {
-			return config.HttpSpanCollectInterval
+			interval = config.HttpSpanCollectInterval
 		} else if definition.Name == jvmMetricsScript {
-			return config.JvmCollectInterval
+			interval = config.JvmCollectInterval
 		} else if definition.Name == postgresqlSpansScript {
-			return config.PostgresCollectInterval
+			interval = config.PostgresCollectInterval
 		} else if definition.Name == mysqlSpansScript {
-			return config.MysqlCollectInterval
+			interval = config.MysqlCollectInterval
 		}
-		return config.CollectInterval
+		if interval == 0 {
+			interval = config.CollectInterval
+		}
+		return interval
 	}
 	if definition.FrequencyS == 0 {
 		return config.CollectInterval

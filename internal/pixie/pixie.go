@@ -151,8 +151,7 @@ func (c *Client) GetClusterScripts(clusterId, clusterName string) ([]*script.Scr
 	}
 	var l []*script.Script
 	for _, s := range resp.Scripts {
-		if script.IsNewRelicScript(s.ScriptName) && (script.IsScriptForCluster(s.ScriptName, clusterName) ||
-			(len(s.ClusterIDs) == 1 && utils.ProtoToUUIDStr(s.ClusterIDs[0]) == clusterId)) {
+		if script.IsScriptForCluster(s.ScriptName, clusterName) || isScriptForClusterById(s.ScriptName, s.ClusterIDs, clusterId) {
 			sd, err := c.getScriptDefinition(s)
 			if err != nil {
 				return nil, err
@@ -165,6 +164,10 @@ func (c *Client) GetClusterScripts(clusterId, clusterName string) ([]*script.Scr
 		}
 	}
 	return l, nil
+}
+
+func isScriptForClusterById(scriptName string, clusterIDs []*uuidpb.UUID, clusterId string) bool {
+	return script.IsNewRelicScript(scriptName) && len(clusterIDs) == 1 && utils.ProtoToUUIDStr(clusterIDs[0]) == clusterId
 }
 
 func getClusterIdsAsString(clusterIDs []*uuidpb.UUID) string {
