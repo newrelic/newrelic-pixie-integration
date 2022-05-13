@@ -4,6 +4,8 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"strings"
+
 	"github.com/gogo/protobuf/types"
 	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 	"google.golang.org/grpc"
@@ -12,7 +14,6 @@ import (
 	"px.dev/pxapi/proto/cloudpb"
 	"px.dev/pxapi/proto/uuidpb"
 	"px.dev/pxapi/utils"
-	"strings"
 )
 
 const (

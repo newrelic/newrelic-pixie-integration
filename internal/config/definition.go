@@ -1,12 +1,13 @@
 package config
 
 import (
-	"github.com/newrelic/newrelic-pixie-integration/internal/script"
-	"gopkg.in/yaml.v2"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/newrelic/newrelic-pixie-integration/internal/script"
+	"gopkg.in/yaml.v2"
 )
 
 const scriptExtension = ".yaml"

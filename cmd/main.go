@@ -3,9 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
-	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 	"os"
 	"time"
+
+	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 
 	"github.com/newrelic/newrelic-pixie-integration/internal/config"
 	"github.com/newrelic/newrelic-pixie-integration/internal/pixie"

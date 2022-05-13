@@ -1,10 +1,11 @@
 package pixie
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/assert"
 	"px.dev/pxapi/proto/uuidpb"
 	"px.dev/pxapi/utils"
-	"testing"
 )
 
 func TestGetScriptClusterIdsAsString(t *testing.T) {
