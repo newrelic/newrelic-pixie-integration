@@ -79,6 +79,7 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 				actions.ToUpdate = append(actions.ToUpdate, &Script{
 					ScriptDefinition: definition,
 					ScriptId:         current.ScriptId,
+					ClusterIds:       config.ClusterId,
 				})
 			}
 			delete(definitions, current.Name)
@@ -89,6 +90,7 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 	for _, definition := range definitions {
 		actions.ToCreate = append(actions.ToCreate, &Script{
 			ScriptDefinition: definition,
+			ClusterIds:       config.ClusterId,
 		})
 	}
 	return actions
