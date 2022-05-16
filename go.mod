@@ -12,7 +12,7 @@ require (
 	google.golang.org/genproto v0.0.0-20210405174219-a39eb2f71cb9 // indirect
 	google.golang.org/grpc v1.44.0
 	gopkg.in/tomb.v1 v1.0.0-20141024135613-dd632973f1e7 // indirect
-	px.dev/pxapi v0.2.1
+	px.dev/pxapi v0.3.1
 )
 
 go 1.16
