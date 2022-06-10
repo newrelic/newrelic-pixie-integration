@@ -98,7 +98,7 @@ frequencyS: 60
 script: |
     import px
 
-    df = px.DataFrame(table='http_events', start_time=px.plugin.start_time)
+    df = px.DataFrame(table='http_events', start_time=px.plugin.start_time, end_time=px.plugin.end_time)
 
     ns_prefix = df.ctx['namespace'] + '/'
     df.container = df.ctx['container_name']
