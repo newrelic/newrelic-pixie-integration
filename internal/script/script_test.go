@@ -27,7 +27,7 @@ df.latency_min = df.latency_min / 1000000
 
 df.cluster_name = %s
 df.cluster_id = px.vizier_id()
-df.pixie = 'pixie'
+df.pixie = 'nr-pixie-integration'
 `
 	testScriptTail = `
 px.export(

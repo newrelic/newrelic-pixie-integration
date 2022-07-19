@@ -126,7 +126,8 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 }
 
 func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
-	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
+	withIntegrationProvider := strings.Replace(definition.Script, "df.pixie = 'pixie'", "df.pixie = 'nr-pixie-integration'", -1)
+	withClusterName := strings.Replace(withIntegrationProvider, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
 	lines := strings.Split(withClusterName, "\n")
 	exportLineNumber := 0
 	for i, line := range lines {
