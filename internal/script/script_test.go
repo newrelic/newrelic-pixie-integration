@@ -30,12 +30,12 @@ df.cluster_id = px.vizier_id()
 df.pixie = 'pixie'
 `
 	testScriptTail = `
-px.export(
+%spx.export(
   df, px.otel.Data(
     resource={
       'k8s.namespace.name': df.namespace,
       'px.cluster.id': df.cluster_id,
-      'k8s.cluster.name': df.cluster_name,
+      'k8s.cluster.name': df.cluster_name,%s
       'instrumentation.provider': df.pixie,
     },
     data=[
@@ -59,10 +59,12 @@ px.export(
 `
 )
 
-var testScript = fmt.Sprintf(testScriptHead, "px.vizier_name()") + testScriptTail
+var testScript = fmt.Sprintf(testScriptHead, "px.vizier_name()") + fmt.Sprintf(testScriptTail, "", "")
+var sourceColLine = "df.source = 'nr-pixie-integration'\n"
+var sourceAttr = "\n      'px.source' = df.source,"
 
 func getTemplatedScript(clusterName string, filter ...string) string {
-	return fmt.Sprintf(testScriptHead, "'"+clusterName+"'") + strings.Join(filter, "\n") + testScriptTail
+	return fmt.Sprintf(testScriptHead, "'"+clusterName+"'") + strings.Join(filter, "\n") + fmt.Sprintf(testScriptTail, sourceColLine, sourceAttr)
 }
 
 func TestIsNewRelicScript(t *testing.T) {

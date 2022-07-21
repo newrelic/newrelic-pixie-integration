@@ -129,14 +129,23 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
 	lines := strings.Split(withClusterName, "\n")
 	exportLineNumber := 0
+	providerLineNumber := 0
 	for i, line := range lines {
 		if strings.Contains(line, "px.export(") {
 			exportLineNumber = i
+		}
+		if strings.Contains(line, "'instrumentation.provider'") {
+			providerLineNumber = i
+		}
+
+		if exportLineNumber != 0 && providerLineNumber != 0 {
 			break
 		}
 	}
 	var finalLines []string
+
 	finalLines = append(finalLines, lines[:exportLineNumber]...)
+
 	if definition.IsPreset || definition.AddExcludes {
 		finalLines = append(finalLines, "# New Relic integration filtering")
 		finalLines = append(finalLines, getExcludeLines(config)...)
@@ -145,7 +154,17 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 		}
 		finalLines = append(finalLines, "")
 	}
-	finalLines = append(finalLines, lines[exportLineNumber:]...)
+	
+	// Add column for px.source.
+        finalLines = append(finalLines, "df.source = 'nr-pixie-integration'")
+
+	finalLines = append(finalLines, lines[exportLineNumber:providerLineNumber]...)
+	
+	// Add source to resource attributes.
+	finalLines = append(finalLines, "      'px.source' = df.source,")
+	
+	finalLines = append(finalLines, lines[providerLineNumber:]...)
+
 	return strings.Join(finalLines, "\n")
 }
 
