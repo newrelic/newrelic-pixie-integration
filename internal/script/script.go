@@ -3,6 +3,7 @@ package script
 import (
 	"fmt"
 	"strings"
+	"regexp"
 )
 
 const (
@@ -128,18 +129,16 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
 	lines := strings.Split(withClusterName, "\n")
+	
+ 	r := regexp.MustCompile(`resource\s*=\s*{`)
 	exportLineNumber := 0
-	providerLineNumber := 0
 	for i, line := range lines {
 		if strings.Contains(line, "px.export(") {
 			exportLineNumber = i
 		}
-		if strings.Contains(line, "'instrumentation.provider'") {
-			providerLineNumber = i
-		}
 
-		if exportLineNumber != 0 && providerLineNumber != 0 {
-			break
+		if r.MatchString(line) {
+			lines[i] = line + "'px.source': df.source,"
 		}
 	}
 	var finalLines []string
@@ -158,13 +157,8 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	// Add column for px.source.
         finalLines = append(finalLines, "df.source = 'nr-pixie-integration'")
 
-	finalLines = append(finalLines, lines[exportLineNumber:providerLineNumber]...)
+	finalLines = append(finalLines, lines[exportLineNumber:]...)
 	
-	// Add source to resource attributes.
-	finalLines = append(finalLines, "      'px.source' = df.source,")
-	
-	finalLines = append(finalLines, lines[providerLineNumber:]...)
-
 	return strings.Join(finalLines, "\n")
 }
 

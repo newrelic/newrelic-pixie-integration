@@ -32,10 +32,10 @@ df.pixie = 'pixie'
 	testScriptTail = `
 %spx.export(
   df, px.otel.Data(
-    resource={
+    resource={%s
       'k8s.namespace.name': df.namespace,
       'px.cluster.id': df.cluster_id,
-      'k8s.cluster.name': df.cluster_name,%s
+      'k8s.cluster.name': df.cluster_name,
       'instrumentation.provider': df.pixie,
     },
     data=[
@@ -61,7 +61,7 @@ df.pixie = 'pixie'
 
 var testScript = fmt.Sprintf(testScriptHead, "px.vizier_name()") + fmt.Sprintf(testScriptTail, "", "")
 var sourceColLine = "df.source = 'nr-pixie-integration'\n"
-var sourceAttr = "\n      'px.source' = df.source,"
+var sourceAttr = "'px.source': df.source,"
 
 func getTemplatedScript(clusterName string, filter ...string) string {
 	return fmt.Sprintf(testScriptHead, "'"+clusterName+"'") + strings.Join(filter, "\n") + fmt.Sprintf(testScriptTail, sourceColLine, sourceAttr)
