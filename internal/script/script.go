@@ -3,6 +3,7 @@ package script
 import (
 	"fmt"
 	"strings"
+	"regexp"
 )
 
 const (
@@ -128,15 +129,22 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
 	lines := strings.Split(withClusterName, "\n")
+	
+ 	r := regexp.MustCompile(`resource\s*=\s*{`)
 	exportLineNumber := 0
 	for i, line := range lines {
 		if strings.Contains(line, "px.export(") {
 			exportLineNumber = i
-			break
+		}
+
+		if r.MatchString(line) {
+			lines[i] = line + "'px.source': df.source,"
 		}
 	}
 	var finalLines []string
+
 	finalLines = append(finalLines, lines[:exportLineNumber]...)
+
 	if definition.IsPreset || definition.AddExcludes {
 		finalLines = append(finalLines, "# New Relic integration filtering")
 		finalLines = append(finalLines, getExcludeLines(config)...)
@@ -145,7 +153,12 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 		}
 		finalLines = append(finalLines, "")
 	}
+	
+	// Add column for px.source.
+        finalLines = append(finalLines, "df.source = 'nr-pixie-integration'")
+
 	finalLines = append(finalLines, lines[exportLineNumber:]...)
+	
 	return strings.Join(finalLines, "\n")
 }
 
