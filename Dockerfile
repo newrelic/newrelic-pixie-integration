@@ -35,7 +35,7 @@ LABEL com.newrelic.image.version=$image_version \
 RUN apk --no-cache upgrade
 
 RUN apk add --no-cache --upgrade \
-    ca-certificates=20211220-r0 \
+    ca-certificates=20220614-r0 \
     && mkdir /lib64 \
     && ln -s /lib/libc.musl-x86_64.so.1 /lib64/ld-linux-x86-64.so.2 \
     && apk add --no-cache tini=0.19.0-r0
