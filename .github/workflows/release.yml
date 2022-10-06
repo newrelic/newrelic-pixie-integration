@@ -25,7 +25,7 @@ jobs:
       run: |
         echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG-pre" >> $GITHUB_ENV
 
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3.1.0
 
     - name: Build container image
       run: |
