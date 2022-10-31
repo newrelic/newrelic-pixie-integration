@@ -9,10 +9,15 @@ import (
 const (
 	scriptPrefix          = "nri-"
 	httpMetricsScript     = "HTTP Metrics"
-	httpSpansScript       = "HTTP Spans"
+	httpSampledSpansScript       = "HTTP Sampled Spans"
 	jvmMetricsScript      = "JVM Metrics"
+	mysqlSampledSpansScript      = "MySQL Sampled Spans"
+	postgresqlSampledSpansScript = "PostgreSQL Sampled Spans"
+	// TODO: These scripts are being renamed for more clarity. Remove the old script names once the new 
+	// plugin version has been released.
 	mysqlSpansScript      = "MySQL Spans"
 	postgresqlSpansScript = "PostgreSQL Spans"
+	httpSpansScript       = "HTTP Spans"
 )
 
 type ScriptConfig struct {
@@ -56,7 +61,7 @@ func IsNewRelicScript(scriptName string) bool {
 }
 
 func IsScriptForCluster(scriptName, clusterName string) bool {
-	return IsNewRelicScript(scriptName) && strings.HasSuffix(scriptName, "-"+clusterName)
+	return IsNewRelicScript(scriptName) && strings.HasSuffix(scriptName, fmt.Sprintf(" (%s)", clusterName))
 }
 
 func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script, config ScriptConfig) ScriptActions {
@@ -98,7 +103,7 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 }
 
 func getScriptName(scriptName string, clusterName string) string {
-	return fmt.Sprintf("%s%s-%s", scriptPrefix, scriptName, clusterName)
+	return fmt.Sprintf("%s%s (%s)", scriptPrefix, scriptName, clusterName)
 }
 
 func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
@@ -106,13 +111,13 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 		var interval int64
 		if definition.Name == httpMetricsScript {
 			interval = config.HttpMetricCollectInterval
-		} else if definition.Name == httpSpansScript {
+		} else if definition.Name == httpSpansScript || definition.Name == httpSampledSpansScript {
 			interval = config.HttpSpanCollectInterval
 		} else if definition.Name == jvmMetricsScript {
 			interval = config.JvmCollectInterval
-		} else if definition.Name == postgresqlSpansScript {
+		} else if definition.Name == postgresqlSpansScript || definition.Name == postgresqlSampledSpansScript {
 			interval = config.PostgresCollectInterval
-		} else if definition.Name == mysqlSpansScript {
+		} else if definition.Name == mysqlSpansScript || definition.Name == mysqlSampledSpansScript {
 			interval = config.MysqlCollectInterval
 		}
 		if interval == 0 {

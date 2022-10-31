@@ -68,17 +68,17 @@ func getTemplatedScript(clusterName string, filter ...string) string {
 }
 
 func TestIsNewRelicScript(t *testing.T) {
-	assert.True(t, IsNewRelicScript("nri-script-cluster"))
+	assert.True(t, IsNewRelicScript("nri-script (cluster)"))
 	assert.False(t, IsNewRelicScript("not-nri-script"))
 }
 
 func TestIsScriptForCluster(t *testing.T) {
-	assert.True(t, IsScriptForCluster("nri-HTPT Metrics-test-cluster", "test-cluster"))
-	assert.False(t, IsScriptForCluster("nri-HTPT Metrics-test-cluster", "new-cluster"))
+	assert.True(t, IsScriptForCluster("nri-HTPT Metrics (test-cluster)", "test-cluster"))
+	assert.False(t, IsScriptForCluster("nri-HTPT Metrics (test-cluster)", "new-cluster"))
 }
 
 func TestGetScriptName(t *testing.T) {
-	assert.Equal(t, "nri-HTTP Metrics-test-cluster", getScriptName("HTTP Metrics", "test-cluster"))
+	assert.Equal(t, "nri-HTTP Metrics (test-cluster)", getScriptName("HTTP Metrics", "test-cluster"))
 }
 func TestGetIntervalCustomScript(t *testing.T) {
 	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
@@ -198,7 +198,7 @@ func TestGetActions(t *testing.T) {
 	actions = GetActions([]*ScriptDefinition{}, []*Script{
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name: "nri-script-another-cluster",
+				Name: "nri-script (another-cluster)",
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
 			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
@@ -245,7 +245,7 @@ func TestGetActions(t *testing.T) {
 	assert.Equal(t, 0, len(actions.ToUpdate))
 	assert.Equal(t, 1, len(actions.ToCreate))
 
-	assert.Equal(t, "nri-HTTP Metrics-test-cluster", actions.ToCreate[0].Name)
+	assert.Equal(t, "nri-HTTP Metrics (test-cluster)", actions.ToCreate[0].Name)
 	assert.Equal(t, "This script sends HTTP metrics to New Relic's OTel endpoint.", actions.ToCreate[0].Description)
 	assert.Equal(t, int64(10), actions.ToCreate[0].FrequencyS)
 	assert.Equal(t, getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""), actions.ToCreate[0].Script)
@@ -263,7 +263,7 @@ func TestGetActions(t *testing.T) {
 	}, []*Script{
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name:        "nri-HTTP Metrics-test-cluster",
+				Name:        "nri-HTTP Metrics (test-cluster)",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 				FrequencyS:  10,
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
@@ -293,7 +293,7 @@ func TestGetActions(t *testing.T) {
 	}, []*Script{
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name:        "nri-HTTP Metrics-test-cluster",
+				Name:        "nri-HTTP Metrics (test-cluster)",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 				FrequencyS:  10,
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
@@ -325,7 +325,7 @@ func TestGetActions(t *testing.T) {
 	}, []*Script{
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name:        "nri-HTTP Metrics-test-cluster",
+				Name:        "nri-HTTP Metrics (test-cluster)",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 				FrequencyS:  10,
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
@@ -356,7 +356,7 @@ func TestGetActions(t *testing.T) {
 	}, []*Script{
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name:        "nri-HTTP Metrics-test-cluster",
+				Name:        "nri-HTTP Metrics (test-cluster)",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 				FrequencyS:  10,
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
@@ -412,7 +412,7 @@ func TestGetActions(t *testing.T) {
 		// outdated: different cluster name in script name
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name: "nri-HTTP Metrics-another-cluster",
+				Name: "nri-HTTP Metrics (another-cluster)",
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
 			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
@@ -420,7 +420,7 @@ func TestGetActions(t *testing.T) {
 		// outdated: spans are now disabled
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name: "nri-HTTP Spans-test-cluster",
+				Name: "nri-HTTP Spans (test-cluster)",
 			},
 			ScriptId:   "cc6455ca-e12e-4a1d-b81c-ecc97a3d44cf",
 			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
@@ -428,7 +428,7 @@ func TestGetActions(t *testing.T) {
 		// outdated: missing filter on mynamespace
 		&Script{
 			ScriptDefinition: ScriptDefinition{
-				Name:        "nri-JVM Metrics-test-cluster",
+				Name:        "nri-JVM Metrics (test-cluster)",
 				Description: "This script sends JVM metrics to New Relic's OTel endpoint.",
 				FrequencyS:  20,
 				Script:      testScript,
@@ -454,7 +454,7 @@ func TestGetActions(t *testing.T) {
 
 	assert.Equal(t, 2, len(actions.ToCreate))
 	var httpMetricsScript, customScript *Script
-	if actions.ToCreate[0].Name == "nri-HTTP Metrics-test-cluster" {
+	if actions.ToCreate[0].Name == "nri-HTTP Metrics (test-cluster)" {
 		httpMetricsScript = actions.ToCreate[0]
 		customScript = actions.ToCreate[1]
 	} else {
@@ -462,12 +462,12 @@ func TestGetActions(t *testing.T) {
 		customScript = actions.ToCreate[0]
 	}
 
-	assert.Equal(t, "nri-HTTP Metrics-test-cluster", httpMetricsScript.Name)
+	assert.Equal(t, "nri-HTTP Metrics (test-cluster)", httpMetricsScript.Name)
 	assert.Equal(t, "This script sends HTTP metrics to New Relic's OTel endpoint.", httpMetricsScript.Description)
 	assert.Equal(t, int64(20), httpMetricsScript.FrequencyS)
 	assert.Equal(t, getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('mynamespace.*', df.namespace)]", ""), httpMetricsScript.Script)
 
-	assert.Equal(t, "nri-Custom Script-test-cluster", customScript.Name)
+	assert.Equal(t, "nri-Custom Script (test-cluster)", customScript.Name)
 	assert.Equal(t, "My custom script", customScript.Description)
 	assert.Equal(t, int64(10), customScript.FrequencyS)
 	assert.Equal(t, getTemplatedScript("test-cluster", ""), customScript.Script)

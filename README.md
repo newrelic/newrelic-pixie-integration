@@ -172,9 +172,9 @@ If the above requirements do not hold for your script, setting `addExcludes` to 
 
 ## Script registration behaviour
 
-The integration will consider scripts that start with `nri-` as managed by the integration. Scripts are registered per cluster and follow the `nri-<script name>-<cluster name>` pattern. The integration updates the scripts to bring them in-sync with the provided configuration. Scripts that are no longer present in the configuration are deleted. If you already have scripts that start with `nri-`, the integration will remove these if they are not specified in the integration configuration. 
+The integration will consider scripts that start with `nri-` as managed by the integration. Scripts are registered per cluster and follow the `nri-<script name> (<cluster name>)` pattern. The integration updates the scripts to bring them in-sync with the provided configuration. Scripts that are no longer present in the configuration are deleted. If you already have scripts that start with `nri-`, the integration will remove these if they are not specified in the integration configuration. 
 
-A cluster name can only be used for a single cluster. Scripts that follow the `nri-<script name>-<cluster name>` pattern with the same `<cluster-name>` but that were registered from another cluster will be overwritten or deleted.
+A cluster name can only be used for a single cluster. Scripts that follow the `nri-<script name> (<cluster name>)` pattern with the same `<cluster-name>` but that were registered from another cluster will be overwritten or deleted.
 
 ## Support
 
