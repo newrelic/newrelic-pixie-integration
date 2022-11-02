@@ -329,3 +329,5 @@ px.dev/pxapi v0.3.0 h1:CCyXmE0KfMw8dY+l9+bZXzZTs3y2BFYRuJWtqtsJ6Bk=
 px.dev/pxapi v0.3.0/go.mod h1:I6MU0yzBHBXTR5nGE24JfnFlAv1hQDHR3oqWm02vEnw=
 px.dev/pxapi v0.3.1 h1:bY1haFi2+whRhWTvSrGFSaJ2SoR9cUHz386mTpUfi0M=
 px.dev/pxapi v0.3.1/go.mod h1:lSKIqQF2oljstbA7NgpP8ITFmHci3kFdS4VeIfb1XD4=
+px.dev/pxapi v0.4.1 h1:+9voAEpuov1yCieGhmt+SI2PaL4uojdbLRab6p51yPE=
+px.dev/pxapi v0.4.1/go.mod h1:lSKIqQF2oljstbA7NgpP8ITFmHci3kFdS4VeIfb1XD4=

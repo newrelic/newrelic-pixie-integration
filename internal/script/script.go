@@ -43,6 +43,7 @@ type ScriptDefinition struct {
 	Script      string `yaml:"script"`
 	AddExcludes bool   `yaml:"addExcludes,omitempty"`
 	IsPreset    bool   `yaml:"-"`
+	Disabled    bool   `yaml:"disabled"`
 }
 
 type ScriptActions struct {
@@ -70,6 +71,7 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 				Description: definition.Description,
 				FrequencyS:  frequencyS,
 				Script:      templateScript(definition, config),
+				Disabled:    getDisabled(definition, config),
 			}
 		}
 	}
@@ -99,6 +101,26 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 
 func getScriptName(scriptName string, clusterName string) string {
 	return fmt.Sprintf("%s%s-%s", scriptPrefix, scriptName, clusterName)
+}
+
+func getDisabled(definition *ScriptDefinition, config ScriptConfig) bool {
+	if !definition.IsPreset {
+		return false
+	}
+	// By default, disable any preset scripts that do not belong to the core set of preset scripts.
+	switch definition.Name {
+	case httpMetricsScript:
+		return false
+	case httpSpansScript:
+		return false
+	case jvmMetricsScript:
+		return false
+	case postgresqlSpansScript:
+		return false
+	case mysqlSpansScript:
+		return false
+	}
+	return true
 }
 
 func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {

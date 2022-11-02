@@ -196,7 +196,7 @@ func (c *Client) getScriptDefinition(s *cloudpb.RetentionScript) (*script.Script
 	}, nil
 }
 
-func (c *Client) AddDataRetentionScript(clusterId string, scriptName string, description string, frequencyS int64, contents string) error {
+func (c *Client) AddDataRetentionScript(clusterId string, scriptName string, description string, frequencyS int64, contents string, disabled bool) error {
 	req := &cloudpb.CreateRetentionScriptRequest{
 		ScriptName:  scriptName,
 		Description: description,
@@ -204,6 +204,7 @@ func (c *Client) AddDataRetentionScript(clusterId string, scriptName string, des
 		Contents:    contents,
 		ClusterIDs:  []*uuidpb.UUID{utils.ProtoFromUUIDStrOrNil(clusterId)},
 		PluginId:    newRelicPluginId,
+		Disabled: disabled,
 	}
 	_, err := c.pluginClient.CreateRetentionScript(c.ctx, req)
 	return err

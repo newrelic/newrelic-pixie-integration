@@ -122,7 +122,7 @@ func main() {
 
 	for _, s := range actions.ToCreate {
 		log.Debugf("Creating script %s", s.Name)
-		err := client.AddDataRetentionScript(clusterId, s.Name, s.Description, s.FrequencyS, s.Script)
+		err := client.AddDataRetentionScript(clusterId, s.Name, s.Description, s.FrequencyS, s.Script, s.Disabled)
 		if err != nil {
 			errs = append(errs, err)
 		}
