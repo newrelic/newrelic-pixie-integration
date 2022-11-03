@@ -43,7 +43,7 @@ type ScriptDefinition struct {
 	Script      string `yaml:"script"`
 	AddExcludes bool   `yaml:"addExcludes,omitempty"`
 	IsPreset    bool   `yaml:"-"`
-	Disabled    bool   `yaml:"disabled"`
+	Disabled    bool   `yaml:"-"`
 }
 
 type ScriptActions struct {
