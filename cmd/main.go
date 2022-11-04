@@ -55,7 +55,7 @@ func main() {
 		}
 		if config.LicenseKey != cfg.Exporter().LicenseKey() {
 			log.Info("New Relic plugin is configured with another license key... Overwriting")
-                	enablePlugin = true
+			enablePlugin = true
                 }
 	}
 
