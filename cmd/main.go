@@ -43,18 +43,23 @@ func main() {
 		log.WithError(err).Fatal("getting data retention plugins failed")
 	}
 
+	enablePlugin := true
 	if plugin.RetentionEnabled {
+		enablePlugin = false
 		config, err := client.GetNewRelicPluginConfig()
 		if err != nil {
 			log.WithError(err).Fatal("getting New Relic plugin config failed")
 		}
-		if config.LicenseKey != cfg.Exporter().LicenseKey() {
-			log.Fatal("the New Relic plugin is already installed with a different license key")
-		}
 		if config.ExportUrl != cfg.Exporter().Endpoint() {
 			log.Fatal("the New Relic plugin is already installed with a different export URL")
 		}
-	} else {
+		if config.LicenseKey != cfg.Exporter().LicenseKey() {
+			log.Info("New Relic plugin is configured with another license key... Overwriting")
+			enablePlugin = true
+                }
+	}
+
+	if enablePlugin {
 		log.Info("Enabling New Relic plugin")
 		err := client.EnableNewRelicPlugin(&pixie.NewRelicPluginConfig{
 			LicenseKey: cfg.Exporter().LicenseKey(),
