@@ -28,12 +28,13 @@ type ScriptConfig struct {
 	PostgresCollectInterval   int64
 	ExcludePods               string
 	ExcludeNamespaces         string
+	IsCustomConfig            bool
 }
 
 type Script struct {
 	ScriptDefinition
 	ScriptId   string
-	ClusterIds string
+	ClusterIds []string
 }
 
 type ScriptDefinition struct {
@@ -62,25 +63,51 @@ func IsScriptForCluster(scriptName, clusterName string) bool {
 func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script, config ScriptConfig) ScriptActions {
 	definitions := make(map[string]ScriptDefinition)
 	for _, definition := range scriptDefinitions {
-		scriptName := getScriptName(definition.Name, config.ClusterName)
 		frequencyS := getInterval(definition, config)
-		if frequencyS > 0 {
-			definitions[scriptName] = ScriptDefinition{
-				Name:        scriptName,
-				Description: definition.Description,
-				FrequencyS:  frequencyS,
-				Script:      templateScript(definition, config),
+
+		// If there are no custom configurations and this is a preset script, use the preset script.
+		if definition.IsPreset && !config.IsCustomConfig {
+			definitions[definition.Name] = ScriptDefinition{
+				Name: definition.Name,
+				FrequencyS: getInterval(definition, config),
+				IsPreset: true,
+				Script: definition.Script,
 			}
+			continue
+		}
+
+                if frequencyS <= 0 {
+                        continue
+                }
+
+		scriptName := getScriptName(definition.Name, config.ClusterName)
+		definitions[scriptName] = ScriptDefinition{
+			Name:        scriptName,
+			Description: definition.Description,
+			FrequencyS:  frequencyS,
+			Script:      templateScript(definition, config),
 		}
 	}
 	actions := ScriptActions{}
 	for _, current := range currentScripts {
 		if definition, present := definitions[current.Name]; present {
-			if definition.Script != current.Script || definition.FrequencyS != current.FrequencyS || config.ClusterId != current.ClusterIds {
+			inClusterIds := false
+			clusterIDs := current.ClusterIds
+			for _, c := range current.ClusterIds {
+				if c == config.ClusterId {
+					inClusterIds = true
+					break
+				}
+			}
+			if !inClusterIds {
+				clusterIDs = append(current.ClusterIds, config.ClusterId)
+			}
+
+			if definition.Script != current.Script || definition.FrequencyS != current.FrequencyS || !inClusterIds {
 				actions.ToUpdate = append(actions.ToUpdate, &Script{
 					ScriptDefinition: definition,
 					ScriptId:         current.ScriptId,
-					ClusterIds:       config.ClusterId,
+					ClusterIds:       clusterIDs,
 				})
 			}
 			delete(definitions, current.Name)
@@ -91,7 +118,7 @@ func GetActions(scriptDefinitions []*ScriptDefinition, currentScripts []*Script,
 	for _, definition := range definitions {
 		actions.ToCreate = append(actions.ToCreate, &Script{
 			ScriptDefinition: definition,
-			ClusterIds:       config.ClusterId,
+			ClusterIds:       []string{config.ClusterId},
 		})
 	}
 	return actions

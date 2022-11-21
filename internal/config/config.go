@@ -74,6 +74,13 @@ func setUpConfig() error {
 	excludePods := os.Getenv(envExcludePods)
 	excludeNamespaces := os.Getenv(envExcludeNamespaces)
 
+	// Track whether additional modifications need to be made to scripts, or whether we can use the preset scripts.
+	isCustomConfig := false
+
+	if excludePods != "" || excludeNamespaces != "" {
+		isCustomConfig = true
+	}
+
 	var err error
 	httpSpanLimit, err := getIntEnvWithDefault(envHttpSpanLimit, defHttpSpanLimit)
 	if err != nil {
@@ -83,6 +90,11 @@ func setUpConfig() error {
 	if err != nil {
 		return err
 	}
+
+	if httpSpanLimit != defHttpSpanLimit || dbSpanLimit != defDbSpanLimit {
+		isCustomConfig = true
+	}
+
 	collectInterval, err := getIntEnvWithDefault(envCollectInterval, defCollectInterval)
 	if err != nil {
 		return err
@@ -132,6 +144,7 @@ func setUpConfig() error {
 			postgresCollectInterval:   postgresCollectInterval,
 			excludePods:               excludePods,
 			excludeNamespaces:         excludeNamespaces,
+			isCustomConfig:            isCustomConfig,
 		},
 		exporter: &exporter{
 			licenseKey: nrLicenseKey,
@@ -320,6 +333,7 @@ type Worker interface {
 	ExcludePods() string
 	ExcludeNamespaces() string
 	validate() error
+	IsCustomConfig() bool
 }
 
 type worker struct {
@@ -336,6 +350,7 @@ type worker struct {
 	postgresCollectInterval   int64
 	excludePods               string
 	excludeNamespaces         string
+	isCustomConfig            bool
 }
 
 func (a *worker) validate() error {
@@ -395,6 +410,10 @@ func (a *worker) ExcludePods() string {
 
 func (a *worker) ExcludeNamespaces() string {
 	return a.excludeNamespaces
+}
+
+func (a *worker) IsCustomConfig() bool {
+	return a.isCustomConfig
 }
 
 func getEndpoint(hostname, licenseKey string) string {

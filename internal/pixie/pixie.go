@@ -171,15 +171,12 @@ func isScriptForClusterById(scriptName string, clusterIDs []*uuidpb.UUID, cluste
 	return script.IsNewRelicScript(scriptName) && len(clusterIDs) == 1 && utils.ProtoToUUIDStr(clusterIDs[0]) == clusterId
 }
 
-func getClusterIdsAsString(clusterIDs []*uuidpb.UUID) string {
-	scriptClusterId := ""
+func getClusterIdsAsString(clusterIDs []*uuidpb.UUID) []string {
+	clusterIDsStr := make([]string, len(clusterIDs))
 	for i, id := range clusterIDs {
-		if i > 0 {
-			scriptClusterId = scriptClusterId + ","
-		}
-		scriptClusterId = scriptClusterId + utils.ProtoToUUIDStr(id)
+		clusterIDsStr[i] = utils.ProtoToUUIDStr(id)
 	}
-	return scriptClusterId
+	return clusterIDsStr 
 }
 
 func (c *Client) getScriptDefinition(s *cloudpb.RetentionScript) (*script.ScriptDefinition, error) {
@@ -196,20 +193,44 @@ func (c *Client) getScriptDefinition(s *cloudpb.RetentionScript) (*script.Script
 	}, nil
 }
 
-func (c *Client) AddDataRetentionScript(clusterId string, scriptName string, description string, frequencyS int64, contents string) error {
+func (c *Client) AddDataRetentionScript(clusterIDs []string, scriptName string, description string, frequencyS int64, contents string) error {
+	clusterIDProtos := make([]*uuidpb.UUID, len(clusterIDs))
+        for i, c := range clusterIDs {
+                clusterIDProtos[i] = utils.ProtoFromUUIDStrOrNil(c)
+        }
 	req := &cloudpb.CreateRetentionScriptRequest{
 		ScriptName:  scriptName,
 		Description: description,
 		FrequencyS:  frequencyS,
 		Contents:    contents,
-		ClusterIDs:  []*uuidpb.UUID{utils.ProtoFromUUIDStrOrNil(clusterId)},
+		ClusterIDs:  clusterIDProtos,
 		PluginId:    newRelicPluginId,
 	}
 	_, err := c.pluginClient.CreateRetentionScript(c.ctx, req)
 	return err
 }
 
-func (c *Client) UpdateDataRetentionScript(clusterId string, scriptId string, scriptName string, description string, frequencyS int64, contents string) error {
+func (c *Client) UpdatePresetDataRetentionScript(clusterIDs []string, scriptId string, frequencyS int64) error {
+	clusterIDProtos := make([]*uuidpb.UUID, len(clusterIDs))
+	for i, c := range clusterIDs {
+		clusterIDProtos[i] = utils.ProtoFromUUIDStrOrNil(c)
+	}
+	req := &cloudpb.UpdateRetentionScriptRequest{
+		ID:          utils.ProtoFromUUIDStrOrNil(scriptId),
+		Enabled:     &types.BoolValue{Value: true},
+		FrequencyS:  &types.Int64Value{Value: frequencyS},
+		ClusterIDs: clusterIDProtos,
+
+	}
+	_, err := c.pluginClient.UpdateRetentionScript(c.ctx, req)
+	return err
+}
+
+func (c *Client) UpdateDataRetentionScript(clusterIDs []string, scriptId string, scriptName string, description string, frequencyS int64, contents string) error {
+        clusterIDProtos := make([]*uuidpb.UUID, len(clusterIDs))
+        for i, c := range clusterIDs {
+                clusterIDProtos[i] = utils.ProtoFromUUIDStrOrNil(c)
+        }
 	req := &cloudpb.UpdateRetentionScriptRequest{
 		ID:          utils.ProtoFromUUIDStrOrNil(scriptId),
 		ScriptName:  &types.StringValue{Value: scriptName},
@@ -217,7 +238,7 @@ func (c *Client) UpdateDataRetentionScript(clusterId string, scriptId string, sc
 		Enabled:     &types.BoolValue{Value: true},
 		FrequencyS:  &types.Int64Value{Value: frequencyS},
 		Contents:    &types.StringValue{Value: contents},
-		ClusterIDs:  []*uuidpb.UUID{utils.ProtoFromUUIDStrOrNil(clusterId)},
+		ClusterIDs:  clusterIDProtos,
 	}
 	_, err := c.pluginClient.UpdateRetentionScript(c.ctx, req)
 	return err

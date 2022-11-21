@@ -105,6 +105,7 @@ func main() {
 		PostgresCollectInterval:   cfg.Worker().PostgresCollectInterval(),
 		ExcludePods:               cfg.Worker().ExcludePods(),
 		ExcludeNamespaces:         cfg.Worker().ExcludeNamespaces(),
+		IsCustomConfig:            cfg.Worker().IsCustomConfig(),
 	})
 
 	var errs []error
@@ -119,7 +120,15 @@ func main() {
 
 	for _, s := range actions.ToUpdate {
 		log.Debugf("Updating script %s", s.Name)
-		err := client.UpdateDataRetentionScript(clusterId, s.ScriptId, s.Name, s.Description, s.FrequencyS, s.Script)
+		if s.IsPreset {
+			err := client.UpdatePresetDataRetentionScript(s.ClusterIds, s.ScriptId, s.FrequencyS)
+			if err != nil {
+				errs = append(errs, err)
+			}
+			continue
+		}
+		
+		err := client.UpdateDataRetentionScript(s.ClusterIds, s.ScriptId, s.Name, s.Description, s.FrequencyS, s.Script)
 		if err != nil {
 			errs = append(errs, err)
 		}
@@ -127,7 +136,7 @@ func main() {
 
 	for _, s := range actions.ToCreate {
 		log.Debugf("Creating script %s", s.Name)
-		err := client.AddDataRetentionScript(clusterId, s.Name, s.Description, s.FrequencyS, s.Script)
+		err := client.AddDataRetentionScript(s.ClusterIds, s.Name, s.Description, s.FrequencyS, s.Script)
 		if err != nil {
 			errs = append(errs, err)
 		}

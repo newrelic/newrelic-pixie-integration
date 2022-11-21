@@ -185,7 +185,7 @@ func TestGetActions(t *testing.T) {
 				Name: "other-script",
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 	}, ScriptConfig{
 		ClusterId: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
@@ -201,7 +201,7 @@ func TestGetActions(t *testing.T) {
 				Name: "nri-script-another-cluster",
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 	}, ScriptConfig{
 		ClusterId: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
@@ -240,6 +240,7 @@ func TestGetActions(t *testing.T) {
 		ClusterName:     "test-cluster",
 		ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		CollectInterval: 10,
+		IsCustomConfig: true,
 	})
 	assert.Equal(t, 0, len(actions.ToDelete))
 	assert.Equal(t, 0, len(actions.ToUpdate))
@@ -249,6 +250,99 @@ func TestGetActions(t *testing.T) {
 	assert.Equal(t, "This script sends HTTP metrics to New Relic's OTel endpoint.", actions.ToCreate[0].Description)
 	assert.Equal(t, int64(10), actions.ToCreate[0].FrequencyS)
 	assert.Equal(t, getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""), actions.ToCreate[0].Script)
+
+	// 1 preset script, 1 current preset scripts, update the preset script
+	actions = GetActions([]*ScriptDefinition{
+		&ScriptDefinition{
+			Name:        "HTTP Metrics",
+			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
+			FrequencyS:  10,
+			Script:      testScript,
+			AddExcludes: false,
+			IsPreset:    true,
+		},
+	}, []*Script{
+		&Script{
+			ScriptDefinition: ScriptDefinition{
+				Name: "HTTP Metrics",
+			},
+			ScriptId: "06906e7e-c684-4858-9fa1-e0bf552b40a6",
+			ClusterIds: []string{},
+		},
+	}, ScriptConfig{
+		ClusterName:     "test-cluster",
+		ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+		CollectInterval: 10,
+	})
+	assert.Equal(t, 0, len(actions.ToDelete))
+	assert.Equal(t, 1, len(actions.ToUpdate))
+	assert.Equal(t, 0, len(actions.ToCreate))
+
+	assert.Equal(t, "HTTP Metrics", actions.ToUpdate[0].Name)
+	assert.Equal(t, int64(10), actions.ToUpdate[0].FrequencyS)
+	assert.Equal(t, []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"}, actions.ToUpdate[0].ClusterIds)
+	assert.True(t, actions.ToUpdate[0].IsPreset)
+
+        // 1 preset script, 1 current preset scripts enabled for another cluster, update the preset script
+        actions = GetActions([]*ScriptDefinition{
+                &ScriptDefinition{
+                        Name:        "HTTP Metrics",
+                        Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
+                        FrequencyS:  10,
+                        Script:      testScript,
+                        AddExcludes: false,
+                        IsPreset:    true,
+                },
+        }, []*Script{
+                &Script{
+                        ScriptDefinition: ScriptDefinition{
+                                Name: "HTTP Metrics",
+                        },
+                        ScriptId: "06906e7e-c684-4858-9fa1-e0bf552b40a6",
+                        ClusterIds: []string{"81cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
+                },
+        }, ScriptConfig{
+                ClusterName:     "test-cluster",
+                ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+                CollectInterval: 10,
+        })
+        assert.Equal(t, 0, len(actions.ToDelete))
+        assert.Equal(t, 1, len(actions.ToUpdate))
+        assert.Equal(t, 0, len(actions.ToCreate))
+
+        assert.Equal(t, "HTTP Metrics", actions.ToUpdate[0].Name)
+        assert.Equal(t, int64(10), actions.ToUpdate[0].FrequencyS)
+        assert.ElementsMatch(t, []string{"81cb2c1d-e6fd-4fb9-9d2f-8358895bf484", "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"}, actions.ToUpdate[0].ClusterIds)
+        assert.True(t, actions.ToUpdate[0].IsPreset)
+
+        // 1 preset script, 1 preset scripts already enabled for the cluster, no change
+        actions = GetActions([]*ScriptDefinition{
+                &ScriptDefinition{
+                        Name:        "HTTP Metrics",
+                        Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
+                        FrequencyS:  10,
+                        Script:      testScript,
+                        AddExcludes: false,
+                        IsPreset:    true,
+                },
+        }, []*Script{
+                &Script{
+                        ScriptDefinition: ScriptDefinition{
+                                Name: "HTTP Metrics",
+				FrequencyS: 10,
+				Script: testScript,
+                        },
+                        ScriptId: "06906e7e-c684-4858-9fa1-e0bf552b40a6",
+                        ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
+                },
+        }, ScriptConfig{
+                ClusterName:     "test-cluster",
+                ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+                CollectInterval: 10,
+        })
+        assert.Equal(t, 0, len(actions.ToDelete))
+        assert.Equal(t, 0, len(actions.ToUpdate))
+        assert.Equal(t, 0, len(actions.ToCreate))
 
 	// don't update exact same script
 	actions = GetActions([]*ScriptDefinition{
@@ -269,12 +363,13 @@ func TestGetActions(t *testing.T) {
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 	}, ScriptConfig{
 		ClusterName:     "test-cluster",
 		ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		CollectInterval: 10,
+		IsCustomConfig: true,
 	})
 	assert.Equal(t, 0, len(actions.ToDelete))
 	assert.Equal(t, 0, len(actions.ToUpdate))
@@ -299,13 +394,14 @@ func TestGetActions(t *testing.T) {
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 	}, ScriptConfig{
 		ClusterName:       "test-cluster",
 		ClusterId:         "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		CollectInterval:   10,
 		ExcludeNamespaces: "mynamespace.*",
+		IsCustomConfig: true,
 	})
 	assert.Equal(t, 0, len(actions.ToDelete))
 	assert.Equal(t, 1, len(actions.ToUpdate))
@@ -331,12 +427,13 @@ func TestGetActions(t *testing.T) {
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 	}, ScriptConfig{
 		ClusterName:     "test-cluster",
 		ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		CollectInterval: 20,
+		IsCustomConfig: true,
 	})
 	assert.Equal(t, 0, len(actions.ToDelete))
 	assert.Equal(t, 1, len(actions.ToUpdate))
@@ -362,16 +459,17 @@ func TestGetActions(t *testing.T) {
 				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "",
+			ClusterIds: []string{},
 		},
 	}, ScriptConfig{
 		ClusterName:     "test-cluster",
 		ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		CollectInterval: 10,
+		IsCustomConfig: true,
 	})
 	assert.Equal(t, 0, len(actions.ToDelete))
 	assert.Equal(t, 1, len(actions.ToUpdate))
-	assert.Equal(t, "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484", actions.ToUpdate[0].ClusterIds)
+	assert.Equal(t, []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"}, actions.ToUpdate[0].ClusterIds)
 	assert.Equal(t, 0, len(actions.ToCreate))
 
 	// Full blown example with outdated, inactive and new scripts
@@ -415,7 +513,7 @@ func TestGetActions(t *testing.T) {
 				Name: "nri-HTTP Metrics-another-cluster",
 			},
 			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 		// outdated: spans are now disabled
 		&Script{
@@ -423,7 +521,7 @@ func TestGetActions(t *testing.T) {
 				Name: "nri-HTTP Spans-test-cluster",
 			},
 			ScriptId:   "cc6455ca-e12e-4a1d-b81c-ecc97a3d44cf",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 		// outdated: missing filter on mynamespace
 		&Script{
@@ -434,7 +532,7 @@ func TestGetActions(t *testing.T) {
 				Script:      testScript,
 			},
 			ScriptId:   "4e4e51b2-86a8-4d57-a2a9-6771d15afcae",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+			ClusterIds: []string{"91cb2c1d-e6fd-4fb9-9d2f-8358895bf484"},
 		},
 	}, ScriptConfig{
 		ClusterName:             "test-cluster",
@@ -442,6 +540,7 @@ func TestGetActions(t *testing.T) {
 		CollectInterval:         20,
 		HttpSpanCollectInterval: -1,
 		ExcludeNamespaces:       "mynamespace.*",
+		IsCustomConfig: true,
 	})
 	assert.Equal(t, 2, len(actions.ToDelete))
 	assert.Equal(t, "06906e7e-c684-4858-9fa1-e0bf552b40a6", actions.ToDelete[0].ScriptId)
