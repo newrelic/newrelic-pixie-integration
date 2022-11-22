@@ -134,7 +134,7 @@ func (c *Client) GetPresetScripts() ([]*script.ScriptDefinition, error) {
 	}
 	var l []*script.ScriptDefinition
 	for _, s := range resp.Scripts {
-		if s.IsPreset {
+		if s.IsPreset && s.PluginId == "new-relic" {
 			sd, err := c.getScriptDefinition(s)
 			if err != nil {
 				return nil, err
@@ -152,7 +152,7 @@ func (c *Client) GetClusterScripts(clusterId, clusterName string) ([]*script.Scr
 	}
 	var l []*script.Script
 	for _, s := range resp.Scripts {
-		if script.IsScriptForCluster(s.ScriptName, clusterName) || isScriptForClusterById(s.ScriptName, s.ClusterIDs, clusterId) {
+		if script.IsScriptForCluster(s.ScriptName, clusterName) || isScriptForClusterById(s.ScriptName, s.ClusterIDs, clusterId) || (s.IsPreset && s.PluginId == "new-relic") {
 			sd, err := c.getScriptDefinition(s)
 			if err != nil {
 				return nil, err
