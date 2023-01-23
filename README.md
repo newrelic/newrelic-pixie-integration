@@ -10,11 +10,11 @@ Once the New Relic plugin is successfully enabled and the PxL scripts are regist
 
 Make sure you have a Pixie account and a New Relic account set up, and have collected the following information:
 
- * [New Relic license key](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/)
- * [Pixie API key](https://docs.pixielabs.ai/using-pixie/api-quick-start/#get-an-api-token) - Using the px CLI: `px api-key create -s`
- * [Pixie Cluster ID](https://docs.pixielabs.ai/using-pixie/api-quick-start/#get-a-cluster-id) - Using the px CLI: `px get cluster --id`
- * Pixie endpoint - Using the px CLI: `px get cluster --cloud-addr`
- * Cluster name: the name of your Kubernetes cluster
+* [New Relic license key](https://docs.newrelic.com/docs/accounts/accounts-billing/account-setup/new-relic-license-key/)
+* [Pixie API key](https://docs.pixielabs.ai/using-pixie/api-quick-start/#get-an-api-token) - Using the px CLI: `px api-key create -s`
+* [Pixie Cluster ID](https://docs.pixielabs.ai/using-pixie/api-quick-start/#get-a-cluster-id) - Using the px CLI: `px get cluster --id`
+* Pixie endpoint - For a [self-hosted Pixie](https://docs.px.dev/installing-pixie/install-guides/self-hosted-pixie/) setup, use `dev.withpixie.dev:443`
+* Cluster name - Using the px CLI: `px get viziers`
 
 ## Building
 
@@ -24,7 +24,7 @@ Docker is required to build the Pixie integration container image.
 
 ## Usage
 
-```docker run --env-file ./env.list -it newrelic/newrelic-pixie-integration:latest```
+```docker run --env-file ./.env -it newrelic/newrelic-pixie-integration:latest```
 
 Define the following environment variables in the `env.list` file:
 
@@ -36,7 +36,7 @@ PIXIE_ENDPOINT=
 CLUSTER_NAME=
 ```
 
-The following environment variables are optional. 
+The following environment variables are optional.
 
 ```
 HTTP_SPAN_LIMIT=5000
@@ -56,6 +56,8 @@ The `*_LIMIT` and `*_INTERVAL_SEC` environment variables can be used to control 
 
 The `EXCLUDE_PODS_REGEX` and `EXCLUDE_NAMESPACES_REGEX` environment variables can be configured with [RE2 regular expressions](https://github.com/google/re2/wiki/Syntax) to not send observability data to New Relic for the matching pods and namespaces. When `EXCLUDE_NAMESPACES_REGEX` is provided, no data for the matching namespaces will be sent. When `EXCLUDE_PODS_REGEX` is provided, no data for the matching pods (independent of the namespace they are in) will be sent.
 
+Note: If the `docker run` command fails, try disabling the all plugins in the Pixie admin UI (/admin/plugins) before re-running the command.
+
 ## Custom scripts
 
 ## Testing
@@ -71,11 +73,13 @@ Run the unit tests locally:
 After executing the command above Pixie data should be flowing into your New Relic account. Use the following NRQL queries to verify this:
 
 **Metrics**
+
 ```
 SELECT * FROM Metric WHERE instrumentation.provider='pixie'
 ```
 
 **Spans**
+
 ```
 SELECT * FROM Span WHERE instrumentation.provider='pixie'
 ```
@@ -84,13 +88,14 @@ SELECT * FROM Span WHERE instrumentation.provider='pixie'
 
 The integration picks up custom scripts in the `SCRIPT_DIR` (set to `/scripts` by default). The custom scripts should be defined in a yaml file with the `.yaml` extension. The following fields are required:
 
- * name (string): the name of the script
- * description (string): description of the script
- * frequencyS (int): frequency to execute the script in seconds
- * scripts (string): the actual PxL script to execute
- * addExcludes (optional boolean, `false` by default): add pod and namespace excludes to the custom script
+* name (string): the name of the script
+* description (string): description of the script
+* frequencyS (int): frequency to execute the script in seconds
+* scripts (string): the actual PxL script to execute
+* addExcludes (optional boolean, `false` by default): add pod and namespace excludes to the custom script
 
 [This tutorial](https://docs.pixielabs.ai/tutorials/integrations/otel/#write-the-pxl-script) explains how to write custom PxL scripts. Example of a custom script, eg. `/scripts/custom1.yaml`:
+
 ```
 name: "custom1"
 description: "Custom script 1"
@@ -163,16 +168,16 @@ df = df[not px.regex_match('team-1-.*', df.pod)]
 ```
 
  The filtering code requires your PxL script to:
-   * Use `df` as the exported dataframe
-   * The dataframe `df` to have a `pod` field (for `EXCLUDE_PODS_REGEX`)
-   * The dataframe `df` to have a `namespace` field (for `EXCLUDE_NAMESPACE_REGEX`)
+
+* Use `df` as the exported dataframe
+* The dataframe `df` to have a `pod` field (for `EXCLUDE_PODS_REGEX`)
+* The dataframe `df` to have a `namespace` field (for `EXCLUDE_NAMESPACE_REGEX`)
 
 If the above requirements do not hold for your script, setting `addExcludes` to `true` will break the script.
 
-
 ## Script registration behaviour
 
-The integration will consider scripts that start with `nri-` as managed by the integration. Scripts are registered per cluster and follow the `nri-<script name>-<cluster name>` pattern. The integration updates the scripts to bring them in-sync with the provided configuration. Scripts that are no longer present in the configuration are deleted. If you already have scripts that start with `nri-`, the integration will remove these if they are not specified in the integration configuration. 
+The integration will consider scripts that start with `nri-` as managed by the integration. Scripts are registered per cluster and follow the `nri-<script name>-<cluster name>` pattern. The integration updates the scripts to bring them in-sync with the provided configuration. Scripts that are no longer present in the configuration are deleted. If you already have scripts that start with `nri-`, the integration will remove these if they are not specified in the integration configuration.
 
 A cluster name can only be used for a single cluster. Scripts that follow the `nri-<script name>-<cluster name>` pattern with the same `<cluster-name>` but that were registered from another cluster will be overwritten or deleted.
 
@@ -197,6 +202,7 @@ If you would like to contribute to this project, review [these guidelines](./CON
 To all contributors, we thank you!  Without your contribution, this project would not be what it is today.
 
 ## License
+
 The New Relic Pixie integration is licensed under the [Apache 2.0](http://apache.org/licenses/LICENSE-2.0.txt) License.
 
 The integration also uses source code from third-party libraries. You can find full details on which libraries are used and the terms under which they are licensed in the third-party notices document.
