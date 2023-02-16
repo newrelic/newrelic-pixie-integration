@@ -56,7 +56,7 @@ func main() {
 		if config.LicenseKey != cfg.Exporter().LicenseKey() {
 			log.Info("New Relic plugin is configured with another license key... Overwriting")
 			enablePlugin = true
-                }
+		}
 	}
 
 	if enablePlugin {
@@ -93,18 +93,13 @@ func main() {
 	}
 
 	actions := script.GetActions(definitions, currentScripts, script.ScriptConfig{
-		ClusterName:               clusterName,
-		ClusterId:                 clusterId,
-		HttpSpanLimit:             cfg.Worker().HttpSpanLimit(),
-		DbSpanLimit:               cfg.Worker().DbSpanLimit(),
-		CollectInterval:           cfg.Worker().CollectInterval(),
-		HttpMetricCollectInterval: cfg.Worker().HttpMetricCollectInterval(),
-		HttpSpanCollectInterval:   cfg.Worker().HttpSpanCollectInterval(),
-		JvmCollectInterval:        cfg.Worker().JvmCollectInterval(),
-		MysqlCollectInterval:      cfg.Worker().MysqlCollectInterval(),
-		PostgresCollectInterval:   cfg.Worker().PostgresCollectInterval(),
-		ExcludePods:               cfg.Worker().ExcludePods(),
-		ExcludeNamespaces:         cfg.Worker().ExcludeNamespaces(),
+		ClusterName:       clusterName,
+		ClusterId:         clusterId,
+		HttpSpanLimit:     cfg.Worker().HttpSpanLimit(),
+		DbSpanLimit:       cfg.Worker().DbSpanLimit(),
+		CollectInterval:   cfg.Worker().CollectInterval(),
+		ExcludePods:       cfg.Worker().ExcludePods(),
+		ExcludeNamespaces: cfg.Worker().ExcludeNamespaces(),
 	})
 
 	var errs []error

@@ -2,8 +2,8 @@ package script
 
 import (
 	"fmt"
-	"strings"
 	"regexp"
+	"strings"
 )
 
 const (
@@ -16,18 +16,13 @@ const (
 )
 
 type ScriptConfig struct {
-	ClusterName               string
-	ClusterId                 string
-	HttpSpanLimit             int64
-	DbSpanLimit               int64
-	CollectInterval           int64
-	HttpMetricCollectInterval int64
-	HttpSpanCollectInterval   int64
-	JvmCollectInterval        int64
-	MysqlCollectInterval      int64
-	PostgresCollectInterval   int64
-	ExcludePods               string
-	ExcludeNamespaces         string
+	ClusterName       string
+	ClusterId         string
+	HttpSpanLimit     int64
+	DbSpanLimit       int64
+	CollectInterval   int64
+	ExcludePods       string
+	ExcludeNamespaces string
 }
 
 type Script struct {
@@ -102,24 +97,6 @@ func getScriptName(scriptName string, clusterName string) string {
 }
 
 func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
-	if definition.IsPreset {
-		var interval int64
-		if definition.Name == httpMetricsScript {
-			interval = config.HttpMetricCollectInterval
-		} else if definition.Name == httpSpansScript {
-			interval = config.HttpSpanCollectInterval
-		} else if definition.Name == jvmMetricsScript {
-			interval = config.JvmCollectInterval
-		} else if definition.Name == postgresqlSpansScript {
-			interval = config.PostgresCollectInterval
-		} else if definition.Name == mysqlSpansScript {
-			interval = config.MysqlCollectInterval
-		}
-		if interval == 0 {
-			interval = config.CollectInterval
-		}
-		return interval
-	}
 	if definition.FrequencyS == 0 {
 		return config.CollectInterval
 	}
@@ -129,8 +106,8 @@ func getInterval(definition *ScriptDefinition, config ScriptConfig) int64 {
 func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 	withClusterName := strings.Replace(definition.Script, "px.vizier_name()", "'"+config.ClusterName+"'", -1)
 	lines := strings.Split(withClusterName, "\n")
-	
- 	r := regexp.MustCompile(`resource\s*=\s*{`)
+
+	r := regexp.MustCompile(`resource\s*=\s*{`)
 	exportLineNumber := 0
 	for i, line := range lines {
 		if strings.Contains(line, "px.export(") {
@@ -153,12 +130,12 @@ func templateScript(definition *ScriptDefinition, config ScriptConfig) string {
 		}
 		finalLines = append(finalLines, "")
 	}
-	
+
 	// Add column for px.source.
-        finalLines = append(finalLines, "df.source = 'nr-pixie-integration'")
+	finalLines = append(finalLines, "df.source = 'nr-pixie-integration'")
 
 	finalLines = append(finalLines, lines[exportLineNumber:]...)
-	
+
 	return strings.Join(finalLines, "\n")
 }
 
