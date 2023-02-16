@@ -105,69 +105,12 @@ func TestGetIntervalCustomScript(t *testing.T) {
 }
 
 func TestGetIntervalPresetScript(t *testing.T) {
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "HTTP Metrics",
-		FrequencyS: 0,
-		IsPreset:   true,
-	}, ScriptConfig{
-		HttpMetricCollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "HTTP Metrics",
-		FrequencyS: 20,
-		IsPreset:   true,
-	}, ScriptConfig{
-		HttpMetricCollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "HTTP Metrics",
-		FrequencyS: -1,
-		IsPreset:   true,
-	}, ScriptConfig{
-		HttpMetricCollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "HTTP Metrics",
-		FrequencyS: 100,
-		IsPreset:   true,
-	}, ScriptConfig{
-		HttpMetricCollectInterval: 0,
-		CollectInterval:           10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
+	assert.Equal(t, int64(30), getInterval(&ScriptDefinition{
 		Name:       "New Preset",
-		FrequencyS: 100,
+		FrequencyS: 30,
 		IsPreset:   true,
 	}, ScriptConfig{
-		CollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "HTTP Spans",
-		FrequencyS: 0,
-		IsPreset:   true,
-	}, ScriptConfig{
-		HttpSpanCollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "JVM Metrics",
-		FrequencyS: 0,
-		IsPreset:   true,
-	}, ScriptConfig{
-		JvmCollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "MySQL Spans",
-		FrequencyS: 0,
-		IsPreset:   true,
-	}, ScriptConfig{
-		MysqlCollectInterval: 10,
-	}))
-	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
-		Name:       "PostgreSQL Spans",
-		FrequencyS: 0,
-		IsPreset:   true,
-	}, ScriptConfig{
-		PostgresCollectInterval: 10,
+		CollectInterval: 100,
 	}))
 }
 
@@ -312,37 +255,6 @@ func TestGetActions(t *testing.T) {
 	assert.Equal(t, getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('mynamespace.*', df.namespace)]", ""), actions.ToUpdate[0].Script)
 	assert.Equal(t, 0, len(actions.ToCreate))
 
-	// update script with different FrequencyS
-	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
-			Name:        "HTTP Metrics",
-			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
-			FrequencyS:  10,
-			Script:      testScript,
-			AddExcludes: false,
-			IsPreset:    true,
-		},
-	}, []*Script{
-		&Script{
-			ScriptDefinition: ScriptDefinition{
-				Name:        "nri-HTTP Metrics-test-cluster",
-				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
-				FrequencyS:  10,
-				Script:      getTemplatedScript("test-cluster", "", "# New Relic integration filtering", ""),
-			},
-			ScriptId:   "06906e7e-c684-4858-9fa1-e0bf552b40a6",
-			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
-		},
-	}, ScriptConfig{
-		ClusterName:     "test-cluster",
-		ClusterId:       "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
-		CollectInterval: 20,
-	})
-	assert.Equal(t, 0, len(actions.ToDelete))
-	assert.Equal(t, 1, len(actions.ToUpdate))
-	assert.Equal(t, int64(20), actions.ToUpdate[0].FrequencyS)
-	assert.Equal(t, 0, len(actions.ToCreate))
-
 	// update script with different ClusterId
 	actions = GetActions([]*ScriptDefinition{
 		&ScriptDefinition{
@@ -437,19 +349,19 @@ func TestGetActions(t *testing.T) {
 			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		},
 	}, ScriptConfig{
-		ClusterName:             "test-cluster",
-		ClusterId:               "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
-		CollectInterval:         20,
-		HttpSpanCollectInterval: -1,
-		ExcludeNamespaces:       "mynamespace.*",
+		ClusterName:       "test-cluster",
+		ClusterId:         "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
+		CollectInterval:   20,
+		ExcludeNamespaces: "mynamespace.*",
 	})
-	assert.Equal(t, 2, len(actions.ToDelete))
+	assert.Equal(t, 1, len(actions.ToDelete))
 	assert.Equal(t, "06906e7e-c684-4858-9fa1-e0bf552b40a6", actions.ToDelete[0].ScriptId)
-	assert.Equal(t, "cc6455ca-e12e-4a1d-b81c-ecc97a3d44cf", actions.ToDelete[1].ScriptId)
 
-	assert.Equal(t, 1, len(actions.ToUpdate))
-	assert.Equal(t, "4e4e51b2-86a8-4d57-a2a9-6771d15afcae", actions.ToUpdate[0].ScriptId)
-	assert.Equal(t, int64(20), actions.ToUpdate[0].FrequencyS)
+	assert.Equal(t, 2, len(actions.ToUpdate))
+	assert.Equal(t, "cc6455ca-e12e-4a1d-b81c-ecc97a3d44cf", actions.ToUpdate[0].ScriptId)
+	assert.Equal(t, int64(10), actions.ToUpdate[0].FrequencyS)
+	assert.Equal(t, "4e4e51b2-86a8-4d57-a2a9-6771d15afcae", actions.ToUpdate[1].ScriptId)
+	assert.Equal(t, int64(10), actions.ToUpdate[1].FrequencyS)
 	assert.Equal(t, getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('mynamespace.*', df.namespace)]", ""), actions.ToUpdate[0].Script)
 
 	assert.Equal(t, 2, len(actions.ToCreate))
@@ -464,7 +376,7 @@ func TestGetActions(t *testing.T) {
 
 	assert.Equal(t, "nri-HTTP Metrics-test-cluster", httpMetricsScript.Name)
 	assert.Equal(t, "This script sends HTTP metrics to New Relic's OTel endpoint.", httpMetricsScript.Description)
-	assert.Equal(t, int64(20), httpMetricsScript.FrequencyS)
+	assert.Equal(t, int64(10), httpMetricsScript.FrequencyS)
 	assert.Equal(t, getTemplatedScript("test-cluster", "", "# New Relic integration filtering", "df = df[not px.regex_match('mynamespace.*', df.namespace)]", ""), httpMetricsScript.Script)
 
 	assert.Equal(t, "nri-Custom Script-test-cluster", customScript.Name)

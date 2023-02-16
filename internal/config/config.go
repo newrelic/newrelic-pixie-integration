@@ -12,32 +12,27 @@ import (
 )
 
 const (
-	envVerbose                   = "VERBOSE"
-	envNROTLPHost                = "NR_OTLP_HOST"
-	envNRLicenseKEy              = "NR_LICENSE_KEY"
-	envPixieClusterID            = "PIXIE_CLUSTER_ID"
-	envPixieEndpoint             = "PIXIE_ENDPOINT"
-	envPixieAPIKey               = "PIXIE_API_KEY"
-	envScriptDir                 = "SCRIPT_DIR"
-	envClusterName               = "CLUSTER_NAME"
-	envHttpSpanLimit             = "HTTP_SPAN_LIMIT"
-	envDbSpanLimit               = "DB_SPAN_LIMIT"
-	envCollectInterval           = "COLLECT_INTERVAL_SEC"
-	envHttpMetricCollectInterval = "HTTP_METRIC_COLLECT_INTERVAL_SEC"
-	envHttpSpanCollectInterval   = "HTTP_SPAN_COLLECT_INTERVAL_SEC"
-	envJvmCollectInterval        = "JVM_COLLECT_INTERVAL_SEC"
-	envMysqlCollectInterval      = "MYSQL_COLLECT_INTERVAL_SEC"
-	envPostgresCollectInterval   = "POSTGRES_COLLECT_INTERVAL_SEC"
-	envExcludePods               = "EXCLUDE_PODS_REGEX"
-	envExcludeNamespaces         = "EXCLUDE_NAMESPACES_REGEX"
-	defScriptDir                 = "/scripts"
-	defPixieHostname             = "work.withpixie.ai:443"
-	endpointEU                   = "otlp.eu01.nr-data.net:443"
-	endpointUSA                  = "otlp.nr-data.net:443"
-	boolTrue                     = "true"
-	defHttpSpanLimit             = 1500
-	defDbSpanLimit               = 500
-	defCollectInterval           = 10
+	envVerbose           = "VERBOSE"
+	envNROTLPHost        = "NR_OTLP_HOST"
+	envNRLicenseKEy      = "NR_LICENSE_KEY"
+	envPixieClusterID    = "PIXIE_CLUSTER_ID"
+	envPixieEndpoint     = "PIXIE_ENDPOINT"
+	envPixieAPIKey       = "PIXIE_API_KEY"
+	envScriptDir         = "SCRIPT_DIR"
+	envClusterName       = "CLUSTER_NAME"
+	envHttpSpanLimit     = "HTTP_SPAN_LIMIT"
+	envDbSpanLimit       = "DB_SPAN_LIMIT"
+	envCollectInterval   = "COLLECT_INTERVAL_SEC"
+	envExcludePods       = "EXCLUDE_PODS_REGEX"
+	envExcludeNamespaces = "EXCLUDE_NAMESPACES_REGEX"
+	defScriptDir         = "/scripts"
+	defPixieHostname     = "work.withpixie.ai:443"
+	endpointEU           = "otlp.eu01.nr-data.net:443"
+	endpointUSA          = "otlp.nr-data.net:443"
+	boolTrue             = "true"
+	defHttpSpanLimit     = 1500
+	defDbSpanLimit       = 500
+	defCollectInterval   = 30
 )
 
 var (
@@ -87,26 +82,6 @@ func setUpConfig() error {
 	if err != nil {
 		return err
 	}
-	httpMetricCollectInterval, err := getIntEnvWithDefault(envHttpMetricCollectInterval, collectInterval)
-	if err != nil {
-		return err
-	}
-	httpSpanCollectInterval, err := getIntEnvWithDefault(envHttpSpanCollectInterval, collectInterval)
-	if err != nil {
-		return err
-	}
-	jvmCollectInterval, err := getIntEnvWithDefault(envJvmCollectInterval, collectInterval)
-	if err != nil {
-		return err
-	}
-	mysqlCollectInterval, err := getIntEnvWithDefault(envMysqlCollectInterval, collectInterval)
-	if err != nil {
-		return err
-	}
-	postgresCollectInterval, err := getIntEnvWithDefault(envPostgresCollectInterval, collectInterval)
-	if err != nil {
-		return err
-	}
 
 	nrHostname = getEndpoint(nrHostname, nrLicenseKey)
 	if err != nil {
@@ -119,19 +94,14 @@ func setUpConfig() error {
 			version:   integrationVersion,
 		},
 		worker: &worker{
-			scriptDir:                 scriptDir,
-			clusterName:               clusterName,
-			pixieClusterID:            pixieClusterID,
-			httpSpanLimit:             httpSpanLimit,
-			dbSpanLimit:               dbSpanLimit,
-			collectInterval:           collectInterval,
-			httpMetricCollectInterval: httpMetricCollectInterval,
-			httpSpanCollectInterval:   httpSpanCollectInterval,
-			jvmCollectInterval:        jvmCollectInterval,
-			mysqlCollectInterval:      mysqlCollectInterval,
-			postgresCollectInterval:   postgresCollectInterval,
-			excludePods:               excludePods,
-			excludeNamespaces:         excludeNamespaces,
+			scriptDir:         scriptDir,
+			clusterName:       clusterName,
+			pixieClusterID:    pixieClusterID,
+			httpSpanLimit:     httpSpanLimit,
+			dbSpanLimit:       dbSpanLimit,
+			collectInterval:   collectInterval,
+			excludePods:       excludePods,
+			excludeNamespaces: excludeNamespaces,
 		},
 		exporter: &exporter{
 			licenseKey: nrLicenseKey,
@@ -312,30 +282,20 @@ type Worker interface {
 	HttpSpanLimit() int64
 	DbSpanLimit() int64
 	CollectInterval() int64
-	HttpMetricCollectInterval() int64
-	HttpSpanCollectInterval() int64
-	JvmCollectInterval() int64
-	MysqlCollectInterval() int64
-	PostgresCollectInterval() int64
 	ExcludePods() string
 	ExcludeNamespaces() string
 	validate() error
 }
 
 type worker struct {
-	scriptDir                 string
-	clusterName               string
-	pixieClusterID            string
-	httpSpanLimit             int64
-	dbSpanLimit               int64
-	collectInterval           int64
-	httpMetricCollectInterval int64
-	httpSpanCollectInterval   int64
-	jvmCollectInterval        int64
-	mysqlCollectInterval      int64
-	postgresCollectInterval   int64
-	excludePods               string
-	excludeNamespaces         string
+	scriptDir         string
+	clusterName       string
+	pixieClusterID    string
+	httpSpanLimit     int64
+	dbSpanLimit       int64
+	collectInterval   int64
+	excludePods       string
+	excludeNamespaces string
 }
 
 func (a *worker) validate() error {
@@ -367,26 +327,6 @@ func (a *worker) DbSpanLimit() int64 {
 
 func (a *worker) CollectInterval() int64 {
 	return a.collectInterval
-}
-
-func (a *worker) HttpMetricCollectInterval() int64 {
-	return a.httpMetricCollectInterval
-}
-
-func (a *worker) HttpSpanCollectInterval() int64 {
-	return a.httpSpanCollectInterval
-}
-
-func (a *worker) JvmCollectInterval() int64 {
-	return a.jvmCollectInterval
-}
-
-func (a *worker) MysqlCollectInterval() int64 {
-	return a.mysqlCollectInterval
-}
-
-func (a *worker) PostgresCollectInterval() int64 {
-	return a.postgresCollectInterval
 }
 
 func (a *worker) ExcludePods() string {
