@@ -48,7 +48,7 @@ SCRIPT_DIR=/scripts
 VERBOSE=true
 ```
 
-The `*_LIMIT` and `*_INTERVAL_SEC` environment variables can be used to control the amount of data that is sent to New Relic. The `COLLECT_INTERVAL_SEC` environment variable sets the collection interval for all PxL scripts. The other `*_INTERVAL_SEC` environment variables are overrides for the individual scripts. Setting the interval to `-1` will disable sending that data to New Relic. The smallest valid interval is 2 seconds.
+The `*_LIMIT` environment variable can be used to control the amount of data that is sent to New Relic. The `COLLECT_INTERVAL_SEC` environment variable sets the collection interval for any PxL script which doesn't already have a defaultFrequency set. Setting the interval to `-1` will disable sending that data to New Relic. The smallest valid interval is 2 seconds.
 
 The `EXCLUDE_PODS_REGEX` and `EXCLUDE_NAMESPACES_REGEX` environment variables can be configured with [RE2 regular expressions](https://github.com/google/re2/wiki/Syntax) to not send observability data to New Relic for the matching pods and namespaces. When `EXCLUDE_NAMESPACES_REGEX` is provided, no data for the matching namespaces will be sent. When `EXCLUDE_PODS_REGEX` is provided, no data for the matching pods (independent of the namespace they are in) will be sent.
 
