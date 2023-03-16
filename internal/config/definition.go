@@ -6,8 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 	"gopkg.in/yaml.v2"
+
+	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 )
 
 const scriptExtension = ".yaml"

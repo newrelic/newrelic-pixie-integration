@@ -7,13 +7,14 @@ import (
 	"strings"
 
 	"github.com/gogo/protobuf/types"
-	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/metadata"
 	"px.dev/pxapi/proto/cloudpb"
 	"px.dev/pxapi/proto/uuidpb"
 	"px.dev/pxapi/utils"
+
+	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 )
 
 const (

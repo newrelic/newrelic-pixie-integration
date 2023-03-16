@@ -2,5 +2,5 @@
 
 echo "[lint] running golangci checks..."
 
-GOFLAGS=-mod=vendor go run -mod=vendor \
-  github.com/golangci/golangci-lint/cmd/golangci-lint run --verbose
+go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+golangci-lint run --fix

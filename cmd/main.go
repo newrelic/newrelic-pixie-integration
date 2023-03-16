@@ -6,11 +6,11 @@ import (
 	"os"
 	"time"
 
-	"github.com/newrelic/newrelic-pixie-integration/internal/script"
+	log "github.com/sirupsen/logrus"
 
 	"github.com/newrelic/newrelic-pixie-integration/internal/config"
 	"github.com/newrelic/newrelic-pixie-integration/internal/pixie"
-	log "github.com/sirupsen/logrus"
+	"github.com/newrelic/newrelic-pixie-integration/internal/script"
 )
 
 const (
