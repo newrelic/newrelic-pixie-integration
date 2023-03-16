@@ -1,4 +1,4 @@
-ARG GOLANG_VERSION=1.16
+ARG GOLANG_VERSION=1.20
 ARG base_image=alpine:3.13
 
 
