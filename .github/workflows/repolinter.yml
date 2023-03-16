@@ -21,10 +21,10 @@ jobs:
             const data = await github.rest.repos.get(context.repo)
             return data.data && data.data.default_branch === context.ref.split('/').slice(-1)[0]
       - name: Checkout Self
-        if: ${{ steps.default-branch.outputs.result == 'true' }}
-        uses: actions/checkout@v3.1.0
+        #if: ${{ steps.default-branch.outputs.result == 'true' }}
+        uses: actions/checkout@v2
       - name: Run Repolinter
-        if: ${{ steps.default-branch.outputs.result == 'true' }}
+        #if: ${{ steps.default-branch.outputs.result == 'true' }}
         uses: newrelic/repolinter-action@v1
         with:
           config_url: https://raw.githubusercontent.com/newrelic/.github/main/repolinter-rulesets/community-project.yml
