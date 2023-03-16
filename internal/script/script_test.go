@@ -59,9 +59,11 @@ df.pixie = 'pixie'
 `
 )
 
-var testScript = fmt.Sprintf(testScriptHead, "px.vizier_name()") + fmt.Sprintf(testScriptTail, "", "")
-var sourceColLine = "df.source = 'nr-pixie-integration'\n"
-var sourceAttr = "'px.source': df.source,"
+var (
+	testScript    = fmt.Sprintf(testScriptHead, "px.vizier_name()") + fmt.Sprintf(testScriptTail, "", "")
+	sourceColLine = "df.source = 'nr-pixie-integration'\n"
+	sourceAttr    = "'px.source': df.source,"
+)
 
 func getTemplatedScript(clusterName string, filter ...string) string {
 	return fmt.Sprintf(testScriptHead, "'"+clusterName+"'") + strings.Join(filter, "\n") + fmt.Sprintf(testScriptTail, sourceColLine, sourceAttr)
@@ -80,6 +82,7 @@ func TestIsScriptForCluster(t *testing.T) {
 func TestGetScriptName(t *testing.T) {
 	assert.Equal(t, "nri-HTTP Metrics-test-cluster", getScriptName("HTTP Metrics", "test-cluster"))
 }
+
 func TestGetIntervalCustomScript(t *testing.T) {
 	assert.Equal(t, int64(10), getInterval(&ScriptDefinition{
 		Name:       "custom script",
@@ -123,7 +126,7 @@ func TestGetActions(t *testing.T) {
 
 	// No definitions, only a non-New Relic script, nothing to do
 	actions = GetActions([]*ScriptDefinition{}, []*Script{
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name: "other-script",
 			},
@@ -139,7 +142,7 @@ func TestGetActions(t *testing.T) {
 
 	// No definitions, 1 (outdated) New Relic script, delete the outdated script
 	actions = GetActions([]*ScriptDefinition{}, []*Script{
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name: "nri-script-another-cluster",
 			},
@@ -156,7 +159,7 @@ func TestGetActions(t *testing.T) {
 
 	// 1 inactive (negative frequencyS) preset script, no current scripts, nothing to do
 	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
+		{
 			Name:        "Http Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 			FrequencyS:  -1,
@@ -171,7 +174,7 @@ func TestGetActions(t *testing.T) {
 
 	// 1 preset script, no current scripts, create the script
 	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
+		{
 			Name:        "HTTP Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -195,7 +198,7 @@ func TestGetActions(t *testing.T) {
 
 	// don't update exact same script
 	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
+		{
 			Name:        "HTTP Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -204,7 +207,7 @@ func TestGetActions(t *testing.T) {
 			IsPreset:    true,
 		},
 	}, []*Script{
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name:        "nri-HTTP Metrics-test-cluster",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
@@ -225,7 +228,7 @@ func TestGetActions(t *testing.T) {
 
 	// update script with different Script
 	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
+		{
 			Name:        "HTTP Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -234,7 +237,7 @@ func TestGetActions(t *testing.T) {
 			IsPreset:    true,
 		},
 	}, []*Script{
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name:        "nri-HTTP Metrics-test-cluster",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
@@ -257,7 +260,7 @@ func TestGetActions(t *testing.T) {
 
 	// update script with different ClusterId
 	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
+		{
 			Name:        "HTTP Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -266,7 +269,7 @@ func TestGetActions(t *testing.T) {
 			IsPreset:    true,
 		},
 	}, []*Script{
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name:        "nri-HTTP Metrics-test-cluster",
 				Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
@@ -288,7 +291,7 @@ func TestGetActions(t *testing.T) {
 
 	// Full blown example with outdated, inactive and new scripts
 	actions = GetActions([]*ScriptDefinition{
-		&ScriptDefinition{
+		{
 			Name:        "HTTP Metrics",
 			Description: "This script sends HTTP metrics to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -296,7 +299,7 @@ func TestGetActions(t *testing.T) {
 			AddExcludes: false,
 			IsPreset:    true,
 		},
-		&ScriptDefinition{
+		{
 			Name:        "HTTP Spans",
 			Description: "This script sends HTTP spans to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -304,7 +307,7 @@ func TestGetActions(t *testing.T) {
 			AddExcludes: false,
 			IsPreset:    true,
 		},
-		&ScriptDefinition{
+		{
 			Name:        "JVM Metrics",
 			Description: "This script sends JVM metrics to New Relic's OTel endpoint.",
 			FrequencyS:  10,
@@ -312,7 +315,7 @@ func TestGetActions(t *testing.T) {
 			AddExcludes: false,
 			IsPreset:    true,
 		},
-		&ScriptDefinition{
+		{
 			Name:        "Custom Script",
 			Description: "My custom script",
 			FrequencyS:  10,
@@ -322,7 +325,7 @@ func TestGetActions(t *testing.T) {
 		},
 	}, []*Script{
 		// outdated: different cluster name in script name
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name: "nri-HTTP Metrics-another-cluster",
 			},
@@ -330,7 +333,7 @@ func TestGetActions(t *testing.T) {
 			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		},
 		// outdated: spans are now disabled
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name: "nri-HTTP Spans-test-cluster",
 			},
@@ -338,7 +341,7 @@ func TestGetActions(t *testing.T) {
 			ClusterIds: "91cb2c1d-e6fd-4fb9-9d2f-8358895bf484",
 		},
 		// outdated: missing filter on mynamespace
-		&Script{
+		{
 			ScriptDefinition: ScriptDefinition{
 				Name:        "nri-JVM Metrics-test-cluster",
 				Description: "This script sends JVM metrics to New Relic's OTel endpoint.",

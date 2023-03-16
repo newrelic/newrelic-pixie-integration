@@ -35,9 +35,8 @@ const (
 	defCollectInterval   = 30
 )
 
-var (
-	regionLicenseRegex = regexp.MustCompile(`^([a-z]{2,3})`)
-)
+var regionLicenseRegex = regexp.MustCompile(`^([a-z]{2,3})`)
+
 var (
 	integrationVersion = "0.0.0"
 	gitCommit          = ""
