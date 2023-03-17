@@ -19,8 +19,8 @@ jobs:
     steps:
     - uses: actions/checkout@v3.1.0
     - name: Install Go
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v4
       with:
-        go-version: '^1.15.10'
+        go-version-file: 'go.mod'
     - name: Run unit tests
       run: make test
