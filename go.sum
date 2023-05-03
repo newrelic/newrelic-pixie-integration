@@ -111,5 +111,5 @@ gopkg.in/yaml.v2 v2.4.0/go.mod h1:RDklbk79AGWmwhnvt/jBztapEOGDOx6ZbXqjP6csGnQ=
 gopkg.in/yaml.v3 v3.0.0-20200313102051-9f266ea9e77c/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
 gopkg.in/yaml.v3 v3.0.1 h1:fxVm/GzAzEWqLHuvctI91KS9hhNmmWOoWu0XTYJS7CA=
 gopkg.in/yaml.v3 v3.0.1/go.mod h1:K4uyk7z7BCEPqu6E+C64Yfv1cQ7kz7rIZviUmN+EgEM=
-px.dev/pxapi v0.3.1 h1:bY1haFi2+whRhWTvSrGFSaJ2SoR9cUHz386mTpUfi0M=
-px.dev/pxapi v0.3.1/go.mod h1:lSKIqQF2oljstbA7NgpP8ITFmHci3kFdS4VeIfb1XD4=
+px.dev/pxapi v0.4.1 h1:+9voAEpuov1yCieGhmt+SI2PaL4uojdbLRab6p51yPE=
+px.dev/pxapi v0.4.1/go.mod h1:lSKIqQF2oljstbA7NgpP8ITFmHci3kFdS4VeIfb1XD4=
