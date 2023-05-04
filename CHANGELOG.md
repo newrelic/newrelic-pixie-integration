@@ -5,6 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 2.1.0 (2023-05-04)
+
+- Update dependencies
+- Scope security action to main branch
+
 ## 2.0.4 (2023-03-16)
 
 - Update Golang from v1.16 to v1.20.
