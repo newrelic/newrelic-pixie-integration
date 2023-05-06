@@ -34,9 +34,6 @@ jobs:
       with:
         username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
         password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
-    - name: Tag docker image
-      run: |
-        docker tag "$DOCKER_IMAGE_TAG" "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
     - name: Push docker image
       run: |
         docker push "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
