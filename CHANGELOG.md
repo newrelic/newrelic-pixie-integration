@@ -5,10 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 2.1.0 (2023-05-04)
+## 2.1.2 (2023-05-05)
 
+- Update base Alpine image from 3.13 to 3.17.2
+- Update pxapi from 0.3.1 to 0.4.1
 - Update dependencies
-- Scope security action to main branch
 
 ## 2.0.4 (2023-03-16)
 
