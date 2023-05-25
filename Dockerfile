@@ -1,5 +1,3 @@
-ARG base_image=alpine:3.17.2
-
 FROM golang:1.20-alpine as builder
 
 RUN mkdir newrelic-pixie-integration
@@ -16,7 +14,7 @@ COPY . ./
 RUN go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
 
 
-FROM $base_image AS core
+FROM alpine:3.18.0
 
 ARG image_version=0.0
 
