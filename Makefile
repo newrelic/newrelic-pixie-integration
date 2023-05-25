@@ -7,7 +7,7 @@ DOCKER_IMAGE_TAG ?= latest
 export GO111MODULE=on
 
 .PHONY: all
-all: lint test build-container build
+all: test build-container build
 
 .PHONY: build
 build:
@@ -16,10 +16,6 @@ build:
 .PHONY: fmt
 fmt:
 	sh scripts/format.sh
-
-.PHONY: lint
-lint:
-	-sh scripts/lint.sh
 
 config=env.list
 .PHONY: run
