@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/gogo/protobuf v1.3.2
 	github.com/sirupsen/logrus v1.9.2
-	github.com/stretchr/testify v1.8.2
+	github.com/stretchr/testify v1.8.3
 	google.golang.org/grpc v1.54.0
 	gopkg.in/yaml.v2 v2.4.0
 	px.dev/pxapi v0.4.1
