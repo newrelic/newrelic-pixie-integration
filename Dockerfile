@@ -4,8 +4,15 @@ FROM golang:1.20-alpine as builder
 
 RUN mkdir newrelic-pixie-integration
 WORKDIR newrelic-pixie-integration
-COPY . ./
+
+# We don't expect the go.mod/go.sum to change frequently.
+# So splitting out the mod download helps create another layer
+# that should cache well.
+COPY go.mod .
+COPY go.sum .
 RUN go mod download
+
+COPY . ./
 RUN go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
 
 
