@@ -12,14 +12,10 @@ RUN go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
 FROM $base_image AS core
 
 ARG image_version=0.0
-ARG agent_version=0.0
-ARG version_file=VERSION
-ARG agent_bin=newrelic-pixie-integration
 
 WORKDIR /app
 
 LABEL com.newrelic.image.version=$image_version \
-      com.newrelic.infra-agent.version=$agent_version \
       com.newrelic.maintainer="infrastructure-eng@newrelic.com" \
       com.newrelic.description="New Relic Infrastructure Pixie integration."
 

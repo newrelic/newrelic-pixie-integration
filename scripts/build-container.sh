@@ -2,4 +2,4 @@
 
 echo "[build-container] building container...."
 
-docker build -t $2:$3 --build-arg GOLANG_VERSION=$1 .
+docker build -t $1:$2 --build-arg image_version=$2 .
