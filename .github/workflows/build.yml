@@ -1,4 +1,4 @@
-name: Lint, Build
+name: Lint, Build, Test
 
 on:
   push:
@@ -22,6 +22,25 @@ jobs:
         only-new-issues: true
         skip-pkg-cache: true
         skip-build-cache: true
+  build:
+    name: Build image
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Build docker image
+      uses: docker/build-push-action@v4
+      with:
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+        context: .
+        outputs: type=docker,dest=nri-kube-events.tar
+        platforms: |
+          linux/amd64
+        tags: newrelic/newrelic-pixie-integration:latest
   test:
     name: Unit tests
     runs-on: ubuntu-latest
