@@ -34,3 +34,6 @@ setup:
 .PHONY: build-container
 build-container:
 	sh scripts/build-container.sh $(DOCKER_IMAGE_NAME) $(DOCKER_IMAGE_TAG)
+
+buildLicenseNotice:
+	@go list -mod=mod -m -json all | go-licence-detector -noticeOut=NOTICE.txt -rules ./assets/license/rules.json  -noticeTemplate ./assets/license/THIRD_PARTY_NOTICES.md.tmpl -noticeOut THIRD_PARTY_NOTICES.md -overrides ./assets/license/overrides -includeIndirect
