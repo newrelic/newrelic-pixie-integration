@@ -37,8 +37,4 @@ setup:
 
 .PHONY: build-container
 build-container:
-	sh scripts/build-container.sh $(GOLANG_VERSION) $(DOCKER_IMAGE_NAME) $(DOCKER_IMAGE_TAG)
-
-
-
-
+	sh scripts/build-container.sh $(DOCKER_IMAGE_NAME) $(DOCKER_IMAGE_TAG)
