@@ -1,44 +1,28 @@
-name: Release
-
+---
 on:
   release:
-    types: [prereleased, released]
+    # Disable prereleased trigger since that requires opting into including the Helm chart
+    # in this repository.
+    # types: [prereleased, released]
+    types: [released]
+    tags:
+      - 'v*'
+  workflow_dispatch:
 
 jobs:
-  release-docker:
-    name: Release docker & config
-    runs-on: ubuntu-latest
-    env:
-      DOCKER_IMAGE_NAME: newrelic/newrelic-pixie-integration
-    steps:
-    - name: Generate docker image version from git tag
-      run: |
-        DOCKER_IMAGE_TAG=$(echo "${{ github.event.release.tag_name }}" | sed 's/^v//')
-        echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG" >> $GITHUB_ENV
-
-    - name: Validate git and docker tag format
-      run: |
-        echo "${{ github.event.release.tag_name }}" | grep -E '^v[0-9.]*[0-9]$'
-        echo "$DOCKER_IMAGE_TAG" | grep -E '^[0-9.]*[0-9]$'
-
-    - if: ${{ github.event.release.prerelease }}
-      run: |
-        echo "DOCKER_IMAGE_TAG=$DOCKER_IMAGE_TAG-pre" >> $GITHUB_ENV
-
-    - uses: actions/checkout@v3
-
-    - name: Build container image
-      run: |
-        make all
-    - uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
-        password: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
-    - name: Push docker image
-      run: |
-        docker push "$DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG"
-    - name: Tag and push docker :latest image
-      if: ${{ ! github.event.release.prerelease }}
-      run: |
-        docker tag $DOCKER_IMAGE_NAME:$DOCKER_IMAGE_TAG $DOCKER_IMAGE_NAME:latest
-        docker push "$DOCKER_IMAGE_NAME:latest"
+  release-integration:
+    permissions:
+      contents: write
+      pull-requests: write
+    uses: newrelic/k8s-metadata-injection/.github/workflows/release-integration-reusable.yml@main
+    with:
+      repo_name: newrelic-pixie-integration
+      artifact_path: bin/
+      docker_image_name: newrelic/newrelic-pixie-integration
+      chart_directory: "REQUIRED_BUT_NOT_USED"
+    secrets:
+      dockerhub_username: ${{ secrets.FSI_DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.FSI_DOCKERHUB_TOKEN }}
+      bot_token: "REQUIRED_BUT_NOT_USED"
+      slack_channel: ${{ secrets.SLACK_CHANNEL }}
+      slack_token: ${{ secrets.SLACK_TOKEN }}
