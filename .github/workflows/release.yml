@@ -1,10 +1,7 @@
 ---
 on:
   release:
-    # Disable prereleased trigger since that requires opting into including the Helm chart
-    # in this repository.
-    # types: [prereleased, released]
-    types: [released]
+    types: [prereleased, released]
     tags:
       - 'v*'
   workflow_dispatch:
