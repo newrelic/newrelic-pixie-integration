@@ -1,4 +1,6 @@
-FROM golang:1.20-alpine as builder
+FROM --platform=${BUILDPLATFORM} golang:1.20-alpine as builder
+
+ARG TARGETOS TARGETARCH
 
 RUN mkdir newrelic-pixie-integration
 WORKDIR newrelic-pixie-integration
@@ -11,7 +13,7 @@ COPY go.sum .
 RUN go mod download
 
 COPY . ./
-RUN go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
+RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
 
 
 FROM alpine:3.18.2
