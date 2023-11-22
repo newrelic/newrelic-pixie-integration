@@ -15,7 +15,7 @@ jobs:
     with:
       repo_name: newrelic-pixie-integration
       artifact_path: bin/
-      disable_helm_chart_release: true
+      enable_helm_chart_release: false
       docker_image_name: newrelic/newrelic-pixie-integration
       chart_directory: "REQUIRED_BUT_NOT_USED"
     secrets:
