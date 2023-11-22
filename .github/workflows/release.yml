@@ -11,10 +11,11 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: newrelic/k8s-metadata-injection/.github/workflows/release-integration-reusable.yml@main
+    uses: ddelnano/k8s-metadata-injection/.github/workflows/release-integration-reusable.yml@ddelnano/allow-disabling-helm-chart-update
     with:
       repo_name: newrelic-pixie-integration
       artifact_path: bin/
+      disable_helm_chart_release: true
       docker_image_name: newrelic/newrelic-pixie-integration
       chart_directory: "REQUIRED_BUT_NOT_USED"
     secrets:
