@@ -13,6 +13,9 @@ all: test build-container build
 build:
 	sh scripts/build.sh
 
+.PHONY: compile
+compile: build
+
 .PHONY: fmt
 fmt:
 	sh scripts/format.sh
