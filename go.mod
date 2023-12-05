@@ -8,7 +8,7 @@ require (
 	github.com/stretchr/testify v1.8.4
 	google.golang.org/grpc v1.58.1
 	gopkg.in/yaml.v2 v2.4.0
-	px.dev/pxapi v0.4.1
+	px.dev/pxapi v0.5.0
 )
 
 require (
@@ -17,6 +17,7 @@ require (
 	github.com/goccy/go-json v0.10.2 // indirect
 	github.com/gofrs/uuid v4.0.0+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
+	github.com/kr/pretty v0.3.1 // indirect
 	github.com/lestrrat-go/backoff/v2 v2.0.8 // indirect
 	github.com/lestrrat-go/blackmagic v1.0.1 // indirect
 	github.com/lestrrat-go/httpcc v1.0.1 // indirect
