@@ -1,4 +1,4 @@
-FROM --platform=${BUILDPLATFORM} golang:1.20-alpine as builder
+FROM --platform=${BUILDPLATFORM} golang:1.22-alpine as builder
 
 ARG TARGETOS TARGETARCH
 
@@ -16,7 +16,7 @@ COPY . ./
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
 
 
-FROM alpine:3.18.5
+FROM alpine:3.19.4
 
 ARG image_version=0.0
 
