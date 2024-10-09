@@ -11,7 +11,7 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
-    uses: newrelic/newrelic-pixie-integration/.github/workflows/release-integration-reusable.yml@main
+    uses: newrelic/k8s-metadata-injection/.github/workflows/release-integration-reusable.yml@main
     with:
       repo_name: newrelic-pixie-integration
       artifact_path: bin/
