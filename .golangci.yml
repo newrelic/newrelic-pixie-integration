@@ -10,10 +10,8 @@ linters-settings:
     min-complexity: 10
   golint:
     min-confidence: 0.8
-  gomnd:
-    settings:
-      mnd:
-        checks: argument,case,condition,return
+  mnd:
+    checks: argument,case,condition,return
   govet:
     check-shadowing: true
   maligned:
@@ -36,13 +34,12 @@ linters:
     - errcheck
     - errorlint
     - exhaustive
-    - exportloopref
     - gocognit
     - gocritic
     - gocyclo
     - gofmt
     - goimports
-    - gomnd
+    - mnd
     - goprintffuncname
     - gosec
     - gosimple
