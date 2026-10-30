@@ -16,7 +16,7 @@ COPY . ./
 RUN GOOS=$TARGETOS GOARCH=$TARGETARCH go build -o /usr/bin/newrelic-pixie-integration cmd/main.go
 
 
-FROM alpine:3.19.4
+FROM alpine:3.22.7
 
 ARG image_version=0.0
 
