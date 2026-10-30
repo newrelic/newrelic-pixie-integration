@@ -19,9 +19,10 @@ jobs:
       with:
         go-version-file: 'go.mod'
     - name: golangci-lint
-      uses: golangci/golangci-lint-action@v3
+      uses: golangci/golangci-lint-action@v9
       continue-on-error: ${{ github.event_name != 'pull_request' }}
       with:
+        version: v2.15.0
         only-new-issues: true
         skip-pkg-cache: true
         skip-build-cache: true
