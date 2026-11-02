@@ -1,6 +1,6 @@
 module github.com/newrelic/newrelic-pixie-integration
 
-go 1.26.0
+go 1.27.3
 
 require (
 	github.com/gogo/protobuf v1.3.2
